@@ -1,0 +1,160 @@
+---
+title: Pull Requests
+description: Branching, commit style, tests, and what review looks like.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+We're happy to take patches. This page describes how to make one that
+lands quickly.
+
+## Before you start
+
+For anything beyond a one-line fix, **open a draft PR or an issue first**.
+A two-line message that says "I'm thinking of doing X, OK?" saves you
+from spending a weekend on something we'd redirect.
+
+Things that almost never need pre-approval:
+
+- Typo fixes.
+- Doc clarifications.
+- Test additions for existing behaviour.
+- Error-message improvements.
+
+Things that benefit from a heads-up:
+
+- New CLI commands or new flags.
+- Changes to JSON envelope fields.
+- New entitlements.
+- Anything that touches system state (system proxy, TUN, helpers).
+- Any breaking change.
+
+## Branching
+
+Fork the repo, then branch from `main`:
+
+```bash
+git checkout -b fix-overrides-merge-order
+```
+
+We don't enforce a branch naming convention, but `<type>-<short-summary>`
+keeps the PR list readable. Useful types: `fix`, `feat`, `docs`,
+`refactor`, `test`, `chore`.
+
+## Commit style
+
+We don't require Conventional Commits, but we appreciate them.
+
+A good commit message:
+
+- Has a **subject line under 72 characters** that describes the change
+  in the imperative ("Add", not "Added").
+- If the subject isn't enough, includes a body that explains **why** and
+  links to the issue.
+- Stays focused. One change per commit. Squash WIPs before requesting
+  review.
+
+Example:
+
+```text
+fix(overrides): respect explicit `delete-rules` after a `+rules` prepend
+
+The override merge applied `delete-rules` against the original rule list
+instead of the prepended one, so user deletes silently no-oped when paired
+with prepend operations.
+
+Fixes #142
+```
+
+## Tests
+
+A change without a test is a regression waiting to happen.
+
+- **`KumoCoreKit` changes** must come with a SwiftPM test under
+  `Tests/KumoCoreTests`. The bar is "would this test have failed before
+  the fix?"
+- **`KumoCLIKit` changes** should come with a test under
+  `Tests/KumoCLITests`. CLI tests can exercise commands without spawning
+  a process.
+- **`KumoApp` changes** are harder to unit-test. At minimum, exercise the
+  flow manually and describe the steps in the PR body.
+
+Run before pushing:
+
+```bash
+make swift-test
+# or, if you want the full pipeline:
+make check
+```
+
+`make check` builds the app, runs the tests, and smoke-checks
+`kumo status --json`.
+
+## Documentation
+
+If your PR changes any of the following, update the matching doc in the
+**same PR**:
+
+- Product behaviour (For Everyone → relevant page).
+- CLI surface (Power User → `cli-reference`).
+- Profile / override semantics (Power User → `profiles-deep-dive` /
+  `overrides`).
+- Permissions (Power User → `permissions`).
+- File locations (Power User → `file-locations`).
+- Architecture or build (Contributing → `architecture` / `build-from-source`).
+
+Engineering docs under `KumoApp/docs/` also need updating when product
+behaviour, architecture, persistence, permissions, testing expectations,
+or UI information architecture meaningfully change.
+
+## Opening the PR
+
+The PR description should answer:
+
+1. **What changes?** A one-paragraph summary.
+2. **Why?** Link to the issue, or describe the motivation if there isn't
+   one.
+3. **How was it tested?** Test names, manual steps, before/after
+   screenshots for UI changes.
+4. **Any follow-ups?** Things you noticed but deliberately scoped out.
+
+Add screenshots for any visible change. For CLI changes, paste the new
+output. Reviewers should not have to run the branch to know what changed.
+
+## Review
+
+What reviewers look for, in order:
+
+1. **The diff matches the description.** No surprise rewrites.
+2. **The change respects the [architecture invariants](/docs/contributing/architecture#invariants).**
+   Especially: CLI works without GUI, JSON is stable, dry-run exists.
+3. **Tests fail without the fix.**
+4. **Errors are actionable.** A new `error.code` should tell the user
+   what went wrong and what to try.
+5. **UI copy follows `AGENTS.md`** — concise, native controls, no
+   redundant labels.
+6. **Docs ship with the change.**
+
+We'll comment in line and ask questions. A `Changes requested` review is
+not a rejection — it's a step on the way to merge.
+
+## Merging
+
+We squash-merge by default. Your final commit message will be the PR
+title plus the squash-summary body. Edit both before merge.
+
+If a maintainer asks you to amend, please force-push to your branch
+(`git push --force-with-lease`). We'd rather see a clean history than a
+chain of "fix review", "fix review again" commits.
+
+<Callout type="info">
+After merge, the change is in `main`. It ships in the next tagged
+release. If the fix is urgent for you, you can build from `main`
+yourself — see [Build From Source](/docs/contributing/build-from-source).
+</Callout>
+
+## Code of conduct
+
+Be kind. Assume good intent. Give credit. If a conversation gets heated,
+walk away for an hour. Kumo is built by people who like building Kumo,
+and we want to keep it that way.

@@ -1,0 +1,64 @@
+---
+title: Start Here
+description: Kumo in three minutes — what it does, who it is for, and how to get going.
+---
+
+import { Cards, Card } from 'fumadocs-ui/components/card';
+import { Callout } from 'fumadocs-ui/components/callout';
+
+If you have ever used a Mac proxy app and felt like it was either too
+sparse or buried under a wall of settings, Kumo is built to land in the
+middle. Daily controls — start, stop, switch nodes, toggle system proxy —
+are one click away. The deeper knobs are there when you need them, and
+they are not in your face when you do not.
+
+## What Kumo does in one paragraph
+
+Kumo takes a subscription URL you already have, downloads the proxy
+config behind it, hands that to the bundled
+[Mihomo](https://github.com/MetaCubeX/mihomo) engine, and exposes a
+calm dashboard for everything: which node you are on, how much traffic
+is flowing, which apps are using the proxy, and whether macOS itself
+should send all traffic through Kumo. There is also a menu bar item so
+you can flip things without bringing the window up.
+
+## What you will need
+
+- A Mac running **macOS 15 Sequoia or newer**, on Apple Silicon
+  (M1 / M2 / M3 / M4).
+- A proxy **subscription URL** from your provider, or a YAML / Clash
+  config file you trust.
+
+<Callout type="info">
+You do **not** need a VPN provider, a developer account, or a
+NetworkExtension entitlement. Kumo never asks for the **Allow VPN
+Configuration** prompt.
+</Callout>
+
+## A reasonable first hour
+
+<Cards>
+  <Card href="/docs/for-everyone/install" title="1. Install Kumo">
+    Download the DMG and drag Kumo into Applications.
+  </Card>
+  <Card href="/docs/for-everyone/first-connection" title="2. Add your subscription">
+    Paste your subscription URL and let Kumo download it.
+  </Card>
+  <Card href="/docs/for-everyone/everyday" title="3. Use the dashboard">
+    Learn what the dashboard, menu bar, and system proxy toggle do.
+  </Card>
+  <Card href="/docs/for-everyone/troubleshooting" title="4. Hit a snag?">
+    Common problems and the fixes that usually work.
+  </Card>
+</Cards>
+
+## Want to do more?
+
+When you outgrow the GUI, the [Power User track](/docs/power-user) shows
+you the `kumo` command line, custom profiles, Shortcuts integration, and
+the agent-skill bundle for coding agents. The dashboard does not change
+— the deeper tools just appear next to it.
+
+If you want to dig into the source or fix something, the
+[Contributing track](/docs/contributing) covers building from source and
+the moving parts inside.

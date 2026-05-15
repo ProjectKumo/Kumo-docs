@@ -1,0 +1,118 @@
+---
+title: Profiles Deep Dive
+description: Local YAML, remote subscriptions, refresh policy, useProxy, and the merge order.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+A **profile** is a complete Mihomo configuration: proxies, proxy
+groups, rules, and DNS. Kumo keeps your profiles in
+`~/Library/Application Support/Kumo/profiles/` and remembers which one
+is active across launches.
+
+## Where profiles come from
+
+Three sources:
+
+| Source         | What it is                                                                          |
+| -------------- | ----------------------------------------------------------------------------------- |
+| **Remote URL** | A subscription URL your provider gives you. Refreshed on a schedule.                |
+| **Local file** | A YAML you author by hand or copy from another tool.                                |
+| **Sub-Store**  | An output URL from the bundled Sub-Store backend. Looks remote to Kumo.             |
+
+Only one profile is active at a time. The active profile's effective
+config — after overrides — is written to
+`~/Library/Application Support/Kumo/work/config.yaml`, which is what
+Mihomo actually loads.
+
+## Add a local profile
+
+1. **Profiles → +**.
+2. Pick **From file**.
+3. Drop in a YAML file.
+4. Save.
+
+Kumo copies the file into its profiles directory; your original is
+untouched.
+
+## Add a remote profile
+
+1. **Profiles → +**.
+2. Paste the URL.
+3. Optionally tick **Refresh through Kumo** (`useProxy`) if the
+   subscription is only reachable through the proxy itself.
+4. Save.
+
+Kumo immediately fetches the URL, parses the YAML, and stores it as a
+profile.
+
+### Refresh policy
+
+Remote profiles refresh:
+
+- Manually, when you click **Refresh** on the detail pane (or
+  `kumo profile refresh <url>`).
+- Automatically on Kumo launch, if more than one day has passed since
+  the last refresh.
+- On demand from Shortcuts via the **Refresh Profile** App Intent.
+
+Subscription `Subscription-Userinfo` headers (used by some providers to
+report traffic) are parsed and shown in the profile detail pane.
+
+### useProxy
+
+Some subscription URLs only work when fetched through the proxy itself
+(common in mainland China for foreign providers). Toggle **Refresh
+through Kumo** to make Kumo fetch via its own SOCKS port. The first
+fetch needs Kumo to already be running.
+
+## Active profile vs effective config
+
+When you make a profile active, Kumo does:
+
+1. Reads the profile YAML.
+2. Applies enabled [overrides](/docs/power-user/overrides) in order.
+3. Applies Kumo-controlled settings (mixed port, controller endpoint,
+   `find-process-mode: always`, DNS block when TUN is on, etc.).
+4. Writes the merged result to `work/config.yaml`.
+5. Tells Mihomo to reload.
+
+The original profile YAML is **never** mutated. Edits to
+`work/config.yaml` are not preserved.
+
+## Authoring a local profile
+
+You can author a YAML by hand, but most users start from a provider's
+subscription and customize it via overrides. If you do want to author
+one from scratch, follow the
+[Mihomo configuration reference](https://wiki.metacubex.one/config/).
+Anything Mihomo accepts, Kumo accepts.
+
+## Profile lifecycle from the CLI
+
+```bash
+# Refresh a remote profile via its subscription URL.
+kumo profile refresh "https://example.com/sub.yaml"
+```
+
+Today the CLI exposes URL-based refresh. The broader profile API
+(import, get content, update, delete) is wired into `KumoController`
+and is being added to the CLI surface.
+
+## Things that bite people
+
+- **Editing `work/config.yaml` directly.** Pointless — it is
+  regenerated on every start. Use [overrides](/docs/power-user/overrides)
+  instead.
+- **Two profiles fighting over the same group name.** Kumo only
+  activates one profile at a time, but if you switch profiles, the
+  selected node may not exist in the new one. Kumo falls back to the
+  group's first member.
+- **A subscription that returns HTML.** Some providers serve a login
+  page when your subscription has expired. Look at the raw response
+  with `curl <url>` to confirm.
+
+<Callout type="info">
+Backups capture profiles too. See
+[backup](/docs/power-user/cli-reference#backup) in the CLI reference.
+</Callout>

@@ -1,0 +1,156 @@
+---
+title: Overrides
+description: Tweak a subscription without forking it. Merge operators, examples, and the gotchas.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+An **override** is a small YAML or JavaScript file Kumo merges on top
+of a profile before Mihomo loads it. Overrides are the right tool for:
+
+- Adding personal rules ("send `mygithub.com` to a specific node").
+- Tweaking DNS settings without forking the upstream profile.
+- Replacing a noisy proxy group with one of your own.
+
+Overrides live in
+`~/Library/Application Support/Kumo/overrides/files/` and an index
+file (`overrides.json`) maps which overrides are enabled in what
+order.
+
+## Merge order
+
+Each time Kumo starts the core (or you change the active profile,
+override list, or order):
+
+1. Start with the active profile's YAML.
+2. Apply enabled overrides in their saved order.
+3. Apply Kumo-controlled keys (`mixed-port`, `external-controller`,
+   `find-process-mode`, DNS block when TUN is on).
+4. Write the merged YAML to `work/config.yaml`.
+
+If two overrides touch the same key, the **later** one wins.
+
+## Merge operators
+
+Kumo understands two operator families. You can mix them in a single
+override file.
+
+### Sparkle-style prefix / suffix on a key
+
+```yaml
++rules:        # prepend
+  - DOMAIN-SUFFIX,mygithub.com,DIRECT
+
+rules+:        # append
+  - DOMAIN-KEYWORD,ads,REJECT
+
+key!:          # replace (overwrite the whole key)
+mode!: rule
+```
+
+### Clash Verge Rev-style prepend / append / delete keys
+
+```yaml
+prepend-rules:
+  - DOMAIN-SUFFIX,mygithub.com,DIRECT
+
+append-rules:
+  - DOMAIN-KEYWORD,ads,REJECT
+
+delete-rules:
+  - "MATCH,Proxy"           # delete the literal MATCH rule
+```
+
+Pick whichever style reads better. The two operator families compose;
+Kumo applies prefixes, suffixes, replacements, prepends, appends, and
+deletes in a defined order so the result is the same regardless of
+which spelling you pick.
+
+## A worked example
+
+Given a profile that includes:
+
+```yaml
+rules:
+  - DOMAIN-KEYWORD,google,Proxy
+  - MATCH,DIRECT
+```
+
+And an override:
+
+```yaml
++rules:
+  - DOMAIN-SUFFIX,myhomeserver.lan,DIRECT
+rules+:
+  - DOMAIN-KEYWORD,porn,REJECT
+delete-rules:
+  - "MATCH,DIRECT"
++rules:
+  - MATCH,Proxy
+```
+
+The effective rule list becomes:
+
+```yaml
+rules:
+  - DOMAIN-SUFFIX,myhomeserver.lan,DIRECT
+  - DOMAIN-KEYWORD,google,Proxy
+  - DOMAIN-KEYWORD,porn,REJECT
+  - MATCH,Proxy
+```
+
+## JavaScript overrides
+
+You can also drop a `.js` file. Kumo runs it in a sandboxed JS engine
+and expects an exported `main(config)` function that returns a mutated
+config. Use this when YAML cannot express the change you want.
+
+```javascript
+// overrides/files/normalize-groups.js
+export function main(config) {
+  for (const group of config['proxy-groups'] ?? []) {
+    if (group.type === 'select') {
+      group.proxies = group.proxies.filter(p => !p.includes('Trial'));
+    }
+  }
+  return config;
+}
+```
+
+JS overrides see only the merged config so far. They cannot read or
+write files outside the sandbox.
+
+## Manage overrides
+
+From the GUI: **Overrides** in the sidebar. Drag to reorder, click the
+checkbox to enable/disable, click an override to edit its content.
+
+From the filesystem:
+
+```text
+overrides/
+  overrides.json        # ordered list, enabled flags
+  files/
+    rules.yaml
+    normalize-groups.js
+    ...
+```
+
+You can edit `overrides.json` and the files in `files/` by hand. Kumo
+re-reads them on the next core reload.
+
+## Things that bite people
+
+- **`mode!: rule` does not change the *current* mode.** It sets the
+  profile's `mode` key on disk. If you have already switched mode at
+  runtime, runtime wins.
+- **Empty `delete-rules`** in YAML evaluates to `null`, not an empty
+  list. Use `delete-rules: []` if you want to explicitly disable it.
+- **Override order matters.** Disabling an override and re-enabling it
+  drops it at the end of the list. Drag it back where it belongs.
+
+<Callout type="info">
+The `find-process-mode: always` key is Kumo-controlled. If an override
+sets it to anything else, the Connections destination will stop showing
+app icons.
+</Callout>

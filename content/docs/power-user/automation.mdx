@@ -1,0 +1,100 @@
+---
+title: Automation
+description: Shortcuts, App Intents, Spotlight, Services — wire Kumo into the rest of macOS.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+Kumo exposes itself to macOS automation in four places:
+
+1. **App Intents** for Shortcuts.app and Siri.
+2. **Spotlight** for typing actions directly.
+3. **Services** for the right-click menu.
+4. The **`kumo` CLI** for shell scripts and `osascript`.
+
+Pick whichever ergonomics fits the moment.
+
+## App Intents (Shortcuts)
+
+Kumo registers five App Intents with Shortcuts:
+
+| Intent                          | What it does                              |
+| ------------------------------- | ----------------------------------------- |
+| **Start Kumo**                  | Start the core.                           |
+| **Stop Kumo**                   | Stop the core.                            |
+| **Refresh Profile**             | Refresh the active profile.               |
+| **Set Mode**                    | Switch outbound mode. Takes a parameter.  |
+| **Toggle System Proxy**         | Flip macOS system proxy on or off.        |
+
+Open **Shortcuts.app** and search for "Kumo" to find them. They can be
+chained with anything else Shortcuts offers — keyboard shortcuts, menu
+bar shortcuts, Focus filters, automations.
+
+### Set Mode parameter values
+
+The **Set Mode** intent takes an enum:
+
+| Value    | Meaning                                                    |
+| -------- | ---------------------------------------------------------- |
+| `rule`   | Rule-based routing (default).                              |
+| `global` | Everything goes through the selected group.                |
+| `direct` | Everything goes direct.                                    |
+
+## Spotlight
+
+Type into Spotlight (default `⌘Space`) and you can run these actions:
+
+- "Start Kumo"
+- "Stop Kumo"
+- "Toggle Kumo system proxy"
+- "Refresh Kumo profile"
+
+Spotlight uses the same App Intents under the hood, so anything you see
+in Shortcuts is also typable.
+
+## Services
+
+Right-click on selected text in any app and Kumo registers a small set
+of services:
+
+- **Add subscription URL to Kumo** — if the selection looks like a
+  subscription URL, this opens Kumo's add-profile sheet pre-filled.
+- **Test in Kumo** — if the selection is a host name, run a quick
+  reachability test using the current proxy chain.
+
+Services are off by default in macOS Sequoia. Enable them from
+**System Settings → Keyboard → Keyboard Shortcuts → Services → Text**.
+
+## Shell scripts
+
+Anything Shortcuts can do, the CLI can do too:
+
+```bash
+# Quick toggle bound to a hotkey via something like Hammerspoon:
+if kumo status --json | jq -e '.data.systemProxy.enabled' >/dev/null; then
+  kumo sysproxy off --json
+else
+  kumo sysproxy on --json
+fi
+```
+
+The CLI is what scripts and coding agents should target. The App
+Intents are what humans inside Shortcuts should target.
+
+<Callout type="info">
+The CLI works whether or not the GUI is running. Shortcuts and Spotlight
+intents need the GUI to be running, because they go through the
+App Intents framework.
+</Callout>
+
+## Idea jar
+
+Things people have wired Kumo into:
+
+- **Focus filters** — turn system proxy off during the "Personal" Focus.
+- **Login items** — start Kumo and refresh the profile.
+- **Hammerspoon** — bind `⌃⌥⌘P` to "toggle system proxy".
+- **Stream Deck** — one button per mode.
+
+If you build something nice, drop it in
+[GitHub Discussions](https://github.com/ProjectKumo/KumoApp/discussions).

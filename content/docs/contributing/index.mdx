@@ -1,0 +1,75 @@
+---
+title: Help Build Kumo
+description: A friendly tour for anyone who wants to file an issue, fix a bug, ship a feature, or improve these docs.
+---
+
+import { Cards, Card } from 'fumadocs-ui/components/card';
+import { Callout } from 'fumadocs-ui/components/callout';
+
+Welcome. Kumo is an open project under
+[AGPL-3.0-only](https://github.com/ProjectKumo/KumoApp/blob/main/LICENSE).
+We're happy to have you here.
+
+This track assumes you can run a terminal and read Swift, but you do **not**
+need to be a macOS systems engineer to contribute. A typo fix counts. So
+does a better error message. So does a fresh pair of eyes on a confusing
+screen.
+
+## Where do you want to start?
+
+<Cards>
+  <Card title="Set up your machine" href="/docs/contributing/build-from-source">
+    Clone the repo, install Xcode 16, and run Kumo from source.
+  </Card>
+  <Card title="Tour the repository" href="/docs/contributing/repository-tour">
+    What lives where — modules, scripts, tests, docs.
+  </Card>
+  <Card title="Understand the architecture" href="/docs/contributing/architecture">
+    The four-module split and why the GUI doesn't drive Mihomo directly.
+  </Card>
+  <Card title="File a great issue" href="/docs/contributing/file-an-issue">
+    What we need to reproduce a bug, and what makes a feature request actionable.
+  </Card>
+  <Card title="Open a pull request" href="/docs/contributing/pull-requests">
+    Branching, commit style, tests, and the review loop.
+  </Card>
+  <Card title="Write or fix docs" href="/docs/contributing/writing-docs">
+    These docs are MDX. You can change them with a PR like any other code.
+  </Card>
+</Cards>
+
+## Ground rules
+
+A few things to keep in mind before you start:
+
+- **Be kind.** Reviewers, reporters, and other contributors are real people.
+- **One change per PR.** Small, focused diffs land faster.
+- **Tests are part of the change.** If you fix a bug, add a test that would
+  have caught it.
+- **Docs are part of the change.** If your patch alters product behaviour,
+  permissions, runtime configuration, or persistence, update the relevant
+  document in the same PR.
+- **English in user-visible copy** unless the change is specifically about
+  localization.
+
+<Callout type="info">
+If you're not sure whether a change is welcome, open a discussion or a
+draft PR first. We'd rather talk early than have you sink a weekend into
+something we'd have to redirect.
+</Callout>
+
+## Good first changes
+
+These are the easiest entry points:
+
+- Fix a typo or broken link in **these docs**
+  ([Kumo-docs](https://github.com/ProjectKumo/Kumo-docs)).
+- Improve an error message in `KumoCoreKit` so the cause is obvious from
+  the CLI output.
+- Tighten or clarify a UI string in `KumoApp` (read `AGENTS.md` first —
+  copy conventions matter here).
+- Add a missing test for a `KumoCoreKit` model or helper.
+
+If you find something that looks easy on the surface but turns out to be
+load-bearing, that's normal. Ask in the issue or PR and someone will help
+you find a safe scope.

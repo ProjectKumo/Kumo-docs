@@ -1,0 +1,74 @@
+---
+title: FAQ
+description: Quick answers to questions people ask before they try Kumo.
+---
+
+## Is Kumo a VPN?
+
+No. Kumo is a **proxy client** that uses your existing subscription. It
+runs the Mihomo proxy engine locally and tells macOS to send traffic
+through it. There is no remote VPN server that Kumo connects to on its
+own.
+
+## Do I need a subscription?
+
+Yes. Kumo is the *client*. You bring your own subscription URL from a
+proxy provider.
+
+## What Macs does it run on?
+
+macOS 15 Sequoia or newer, on Apple Silicon (M1 / M2 / M3 / M4). Intel
+Macs are not supported in the first release.
+
+## Is it free? Is it open source?
+
+Yes and yes. Kumo is licensed under the GNU Affero General Public
+License v3.0 only (AGPL-3.0-only). The source is at
+[github.com/ProjectKumo/KumoApp](https://github.com/ProjectKumo/KumoApp).
+
+## Does Kumo ask for "Allow VPN Configuration"?
+
+No. Kumo does **not** install a NetworkExtension and does **not**
+register a VPN profile. The "Allow VPN Configuration" prompt is not
+expected on first launch or any other time.
+
+## Does Kumo work alongside another proxy app?
+
+You can have other proxy apps installed, but you can only have one
+managing macOS's system proxy at a time. Two apps fighting for the same
+setting will look like Kumo's System Proxy toggle keeps flipping back
+to off.
+
+## Can I run Kumo headlessly?
+
+Yes — most of what the GUI does is also exposed through the `kumo`
+command-line tool, so you can scriptKumo. The menu bar icon and
+Shortcuts integration still need the GUI to be running. See
+[Power User → Command line](/docs/power-user/command-line).
+
+## How do I switch subscriptions?
+
+Open **Profiles**, right-click the profile you want, and pick **Set as
+Active**. Only one profile is active at a time. If you want to mix
+several, take a look at
+[Sub-Store](/docs/for-everyone/sub-store).
+
+## Where does Kumo store my settings and subscriptions?
+
+Under `~/Library/Application Support/Kumo/`. You normally never need
+to look in there. If you do, see
+[File locations](/docs/power-user/file-locations) in the Power User
+track.
+
+## How do I report a bug?
+
+Open an issue at
+[github.com/ProjectKumo/KumoApp/issues](https://github.com/ProjectKumo/KumoApp/issues).
+The [Troubleshooting](/docs/for-everyone/troubleshooting) page lists
+what to include.
+
+## Can I help build Kumo?
+
+Yes. Check the [Contributing track](/docs/contributing). It covers
+building from source, the rough shape of the codebase, and how to
+file a good PR.

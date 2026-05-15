@@ -1,0 +1,63 @@
+---
+title: Stay Up to Date
+description: How Kumo checks for new versions and installs them, and what to do if auto-update fails.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+Kumo has a built-in update checker. You usually do not need to do
+anything — when a new version is out, Kumo posts a notification and you
+can install it with one click.
+
+## How it works (in 30 seconds)
+
+- Kumo asks GitHub Releases every five minutes "is there a newer
+  version?".
+- If there is, you get a macOS notification with three actions:
+  - **Install Now** — downloads the new version in the background.
+  - **Remind Me Later** — try again in a few hours.
+  - **Restart Now** — appears after the download is finished.
+- Kumo verifies the downloaded file is what it says it is, then runs a
+  tiny installer that replaces `Kumo.app` and re-launches.
+
+You can also check manually: open **Settings → Updates** and click
+**Check for Updates**.
+
+## Stable vs beta channel
+
+By default Kumo follows the **Stable** channel — only finished releases.
+If you want to help test the next version before it ships, switch to
+the **Beta** channel from **Settings → Updates**.
+
+You can flip back to Stable at any time. Kumo will keep your data
+even if you go from beta back to a slightly older stable release.
+
+## When auto-update fails
+
+The most common reason: Kumo is not installed in `/Applications`. Some
+users keep it in `~/Applications`, in a Setapp folder, or on an external
+disk. In those cases macOS protects the surrounding folder from being
+written to, and the auto-installer reports an error.
+
+Fix it by:
+
+1. Quitting Kumo.
+2. Moving `Kumo.app` into `/Applications` (regular `/Applications`, not
+   `~/Applications`).
+3. Re-launching and re-running the update.
+
+If that does not help, you can always grab the DMG by hand from the
+[release page](https://github.com/ProjectKumo/KumoApp/releases/latest)
+and install over the top — your settings and subscriptions stay.
+
+<Callout type="info">
+Kumo never installs updates without you saying yes. The check is
+automatic; the install is not.
+</Callout>
+
+## What's next
+
+- See what changed: [release notes on GitHub](https://github.com/ProjectKumo/KumoApp/releases).
+- Curious about the mechanics?
+  [Auto-updates (deep dive)](/docs/power-user/auto-updates) in the
+  Power User track.

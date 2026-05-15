@@ -1,59 +1,52 @@
 ---
-title: Welcome to Kumo
-description: A calm native macOS client for the Mihomo proxy core, with a SwiftUI app and an agent-friendly CLI.
+title: Welcome
+description: Kumo is a calm, native proxy app for Mac. Pick the path that fits you.
 ---
 
-Kumo is a Mac utility for connecting quickly without turning everyday proxy
-management into a network operations dashboard. The first screen is designed to
-answer four questions at a glance:
+import { Cards, Card } from 'fumadocs-ui/components/card';
+import { BookOpenCheck, Wrench, Hammer } from 'lucide-react';
 
-- Is Kumo connected?
-- Which outbound mode is active?
-- Is the macOS system proxy enabled?
-- Which profile and proxy group are currently in use?
+Kumo is a native macOS app that routes traffic through the
+[Mihomo](https://github.com/MetaCubeX/mihomo) proxy core. You bring your
+own subscription; Kumo gives you a polished SwiftUI app, a friendly menu
+bar item, and — if you want — a command-line tool and automation hooks
+that match the GUI feature-for-feature.
 
-Advanced capabilities — DNS, TUN, rule providers, logs, overrides, and
-Sub-Store — stay discoverable in dedicated sections, so daily use remains
-focused.
-
-## What Kumo Is
-
-| Area              | What Kumo provides                                                              |
-| ----------------- | ------------------------------------------------------------------------------- |
-| Native macOS app  | SwiftUI interface around `NavigationSplitView`, Settings, and a status item.    |
-| Shared core       | `KumoCoreKit` owns Mihomo lifecycle, profile generation, controller, and state. |
-| CLI for everyone  | `kumo` supports stable command names, `--json`, dry-run, and predictable exits. |
-| Mihomo discovery  | Bring your own binary, use Homebrew, or let Kumo install a managed core.        |
-| Safe defaults     | Empty profiles produce a direct config; system proxy changes can be previewed.  |
-
-## Where To Start
+These docs are split into three tracks. Pick the one that fits today.
+You can always switch tracks later.
 
 <Cards>
   <Card
-    title="Install Kumo"
-    href="/docs/getting-started/install"
-    description="Requirements, download, and first-run setup on macOS 15+."
+    icon={<BookOpenCheck />}
+    title="For Everyone"
+    href="/docs/for-everyone"
+    description="Install Kumo, add your subscription, and get connected. Plain language, no command line required."
   />
   <Card
-    title="Take the app tour"
-    href="/docs/app"
-    description="Daily, Inspect, and Configure — what each destination does."
+    icon={<Wrench />}
+    title="Power User"
+    href="/docs/power-user"
+    description="Drive Kumo from the command line, author your own profiles, automate with Shortcuts and Spotlight."
   />
   <Card
-    title="Use the CLI"
-    href="/docs/cli"
-    description="Drive Kumo from a terminal or a coding agent with JSON output."
-  />
-  <Card
-    title="Manage profiles"
-    href="/docs/profiles"
-    description="Import local or remote Mihomo / Clash profiles and refresh them."
+    icon={<Hammer />}
+    title="Contributing"
+    href="/docs/contributing"
+    description="Build Kumo from source, learn the architecture, and ship a fix or feature back upstream."
   />
 </Cards>
 
-## Stay Calm
+## Quick links
 
-Kumo's first version intentionally avoids privileged helpers. System proxy and
-TUN changes use macOS administrator authorization only when they truly need
-elevated privileges, and Kumo never registers a VPN profile. See
-[Permissions](/docs/reference/permissions) for the full list.
+- **Download** — [the latest release](https://github.com/ProjectKumo/KumoApp/releases/latest).
+- **Source** — [github.com/ProjectKumo/KumoApp](https://github.com/ProjectKumo/KumoApp).
+- **Report a bug** — [open an issue](https://github.com/ProjectKumo/KumoApp/issues).
+
+## What Kumo is not
+
+- Not a VPN service. You need a subscription from somewhere else to
+  actually go anywhere.
+- Not a NetworkExtension. Kumo does not request the **Allow VPN
+  Configuration** prompt and does not install a system VPN profile.
+- Not Windows or Linux software (today). Kumo is macOS-only and targets
+  macOS 15 Sequoia or newer on Apple Silicon.

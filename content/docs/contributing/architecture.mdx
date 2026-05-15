@@ -1,0 +1,149 @@
+---
+title: Architecture
+description: Why the GUI doesn't drive Mihomo directly, and what the shared control layer guarantees.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+The single most load-bearing decision in Kumo is this:
+
+> **The UI and the CLI are both clients of a shared control layer. Neither
+> drives Mihomo directly.**
+
+Everything else in this section is a consequence of that.
+
+## The layered picture
+
+```text
+┌──────────────────────┐   ┌──────────────────────┐   ┌──────────────────────┐
+│   KumoApp (SwiftUI)  │   │   KumoCLI (`kumo`)   │   │  KumoService (later) │
+└──────────┬───────────┘   └──────────┬───────────┘   └──────────┬───────────┘
+           │                          │                          │
+           └────────────┬─────────────┴─────────────┬────────────┘
+                        ▼                           ▼
+                ┌────────────────────────────────────────┐
+                │              KumoCoreKit               │
+                │  Models · Profiles · Runtime · Net ·   │
+                │  System proxy · Paths · State · Errors │
+                └────────────────────────────────────────┘
+                                  ▼
+                ┌────────────────────────────────────────┐
+                │           Mihomo core (process)        │
+                │  external-controller · mixed-port · …  │
+                └────────────────────────────────────────┘
+```
+
+`KumoCoreKit` is the contract. If you find yourself adding business logic
+into `KumoApp` or `KumoCLIKit`, stop and ask whether it belongs in the
+shared library instead.
+
+## What each layer owns
+
+### `KumoCoreKit`
+
+- Mihomo process lifecycle — start, stop, restart, supervise.
+- Profile loading — fetching subscriptions, parsing YAML, merging
+  overrides, generating the final `work/config.yaml`.
+- Mihomo external-controller HTTP client — proxy switching, group
+  selection, traffic readings.
+- macOS system proxy via `networksetup`, including PAC.
+- State persistence (`state.json`, `preferences.json`,
+  `proxy-geo-cache.json`).
+- Sub-Store sidecar lifecycle.
+- Agent skill installation.
+- Stable, typed errors. The CLI's `error.code` values come from here.
+
+### `KumoCLIKit`
+
+- Command parsing (Argument Parser).
+- Output rendering — plain text vs JSON envelope.
+- Dry-run formatting.
+- Exit code mapping.
+- **Nothing else.** A CLI command never reaches around `KumoCoreKit` to
+  call `networksetup` or hit Mihomo directly.
+
+### `KumoApp`
+
+- SwiftUI views and navigation.
+- Menu bar status item.
+- Settings window.
+- Onboarding sheet.
+- UI copy constraints from `AGENTS.md`.
+
+### `KumoService`
+
+- Reserved for service mode. Will own TUN, guarded system proxy, and
+  signed-request transport.
+
+## Invariants
+
+These are the rules that keep the layers honest.
+
+### 1. The CLI must work without the GUI
+
+You can install `kumo`, run `kumo start`, switch nodes, refresh
+profiles, and inspect state without ever opening the app. This is the
+acid test for "is this logic in the right module."
+
+### 2. The GUI must work without the CLI on the user's PATH
+
+A user who has never touched a terminal can install Kumo, paste a
+subscription URL, and use it. Nothing in the app shells out to `kumo`.
+
+### 3. JSON is a contract
+
+`kumo --json` output is part of the public API. Adding a field is fine.
+Renaming or removing a field is a breaking change. The same applies to
+`error.code` values.
+
+### 4. Dry-run is mandatory for system writes
+
+Anything that changes macOS state — system proxy, CLI symlink — must
+support `--dry-run`. Dry-run prints the exact commands without invoking
+them.
+
+### 5. Permissions are explicit
+
+If an operation needs `with administrator privileges`, the user sees a
+single, native macOS prompt for that specific operation. Kumo does not
+hold ongoing root.
+
+### 6. State decode is permissive
+
+`state.json` and `preferences.json` decode missing fields with defaults.
+A Kumo update that adds new keys must never invalidate an older state
+file. A user who rolls back to an older Kumo must not lose all settings.
+
+## Async and concurrency
+
+Kumo uses Swift 6's structured concurrency throughout `KumoCoreKit`.
+
+- Long-running supervised work (Mihomo process, Sub-Store sidecar, update
+  poll) lives in actors.
+- HTTP work uses `URLSession` with async APIs.
+- The UI observes published state via `@Observable` / `Observable
+  Object` types.
+- Tests use `swift-testing` and avoid touching real system state — they
+  use temporary application support directories and `--dry-run` for
+  system proxy commands.
+
+If you add a new long-running piece, ask whether it should live in an
+actor and whether its state belongs on the existing observed types.
+
+## Where the design conversation happens
+
+Architectural changes go through `docs/` in the KumoApp repo. The most
+useful starting points:
+
+- `docs/product/information-architecture.md` — the product scope.
+- `docs/core/control-layer.md` — the control boundary in detail.
+- `docs/operations/system-integration-permissions.md` — why permissions
+  are shaped the way they are.
+- `docs/roadmap/service-mode-roadmap.md` — where service mode is heading.
+
+<Callout type="info">
+If your change touches an invariant on this page — for example, you need
+the GUI to call into `kumo` for something — open an issue first. We can
+almost always find a way to keep the invariant intact, and if we can't,
+that decision deserves a written discussion.
+</Callout>

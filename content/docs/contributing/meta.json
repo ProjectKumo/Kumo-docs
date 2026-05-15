@@ -1,0 +1,18 @@
+{
+  "title": "Contributing",
+  "description": "Help build Kumo. Set up your machine, find your way around the code, and ship a good first patch.",
+  "pages": [
+    "index",
+    "---Get Set Up---",
+    "build-from-source",
+    "repository-tour",
+    "architecture",
+    "---Send Changes---",
+    "file-an-issue",
+    "pull-requests",
+    "writing-docs",
+    "---Ship It---",
+    "release-process",
+    "license"
+  ]
+}

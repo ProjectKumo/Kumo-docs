@@ -1,0 +1,152 @@
+---
+title: Build From Source
+description: Clone the repository, install Xcode, and run Kumo locally.
+---
+
+import { Steps, Step } from 'fumadocs-ui/components/steps';
+import { Callout } from 'fumadocs-ui/components/callout';
+
+You'll have Kumo running from source in about fifteen minutes.
+
+## What you need
+
+- **macOS 15 Sequoia or later** on Apple Silicon. The app uses APIs that
+  are not available on macOS 14 or x86_64.
+- **Xcode 16 or later** with the **Swift 6.0** toolchain. Install from the
+  App Store, then open it once so the Command Line Tools settle.
+- **Git** (ships with Xcode's Command Line Tools).
+- **Optional but recommended**:
+  [XcodeGen](https://github.com/yonaskolb/XcodeGen) for regenerating the
+  Xcode project from `project.yml` (`brew install xcodegen`).
+
+You do **not** need to install Mihomo manually. Kumo can download a
+managed copy on first launch.
+
+## Clone and build
+
+<Steps>
+<Step>
+### Clone the repository
+
+```bash
+git clone https://github.com/ProjectKumo/KumoApp.git
+cd KumoApp
+```
+</Step>
+
+<Step>
+### Build the Swift package
+
+```bash
+make swift-build
+```
+
+This compiles every product — the app, the CLI, the shared library, and
+the service binary — in debug mode. The first build takes a few minutes
+while SwiftPM resolves dependencies.
+</Step>
+
+<Step>
+### Run the app
+
+```bash
+make dev
+```
+
+`make dev` quits any running Kumo, rebuilds the `.app` bundle, and opens
+the debug build. The window appears with **Overview** selected.
+</Step>
+
+<Step>
+### Try the CLI
+
+```bash
+make run-cli ARGS="status --json"
+```
+
+You should see a JSON envelope like:
+
+```json
+{
+  "ok": true,
+  "data": { "running": false, "mode": "rule", "...": "..." },
+  "error": null
+}
+```
+
+`make run-cli ARGS="..."` is equivalent to running the `kumo` executable
+with those arguments, but it always uses your current debug build.
+</Step>
+</Steps>
+
+## Useful make targets
+
+The `Makefile` is the source of truth for build and test workflows. Read
+it whenever something behaves unexpectedly — it's short.
+
+| Target | What it does |
+| --- | --- |
+| `make help` | Print every target with a one-line description. |
+| `make swift-build` | `swift build` for every product. |
+| `make build-release` | `swift build -c release`. |
+| `make app` | Build the `.app` bundle into `build/Build/Products/Debug/`. |
+| `make app-release` | Build a Release-configuration `.app`. |
+| `make dev` | Quit, rebuild, and re-open the debug app. The fastest inner loop. |
+| `make run-app` | Launch the SwiftUI app via `swift run` (no `.app` bundle). |
+| `make run-cli ARGS="..."` | Invoke the CLI with arbitrary arguments. |
+| `make swift-test` | Run unit tests with SwiftPM. |
+| `make xcode-test` | Run unit tests via `xcodebuild`. |
+| `make check` | Build + test + smoke-check `kumo status --json`. |
+| `make release-dmg VERSION=0.0.1` | Build the Release app and a notarizable DMG. |
+| `make reset-local-state` | Wipe `~/Library/Application Support/Kumo/`. |
+| `make clean` | Remove SwiftPM build artefacts. |
+
+<Callout type="warn">
+`make reset-local-state` deletes profiles, overrides, and Sub-Store data
+from your local Kumo install. Use it when you want a true first-launch
+state — not when you have data you care about.
+</Callout>
+
+## Running from Xcode
+
+If you prefer Xcode over the command line:
+
+```bash
+make generate          # regenerate Kumo.xcodeproj from project.yml
+open Kumo.xcodeproj
+```
+
+Pick the **KumoApp** scheme and hit ⌘R. The shared library, the CLI, and
+the service are all part of the same workspace.
+
+To run package tests in Xcode, switch to the **Kumo-Package** scheme.
+
+## When the build fails
+
+A few things that catch people:
+
+- **`xcodegen: command not found`** — install with `brew install xcodegen`,
+  or skip `make generate` and just use SwiftPM (`make swift-build`,
+  `make run-app`).
+- **Sub-Store preparation step fails** — `make prepare-substore-runtime`
+  is invoked by `make swift-build`. It downloads a Node runtime into
+  `Sources/KumoCoreKit/Resources/SubStore/`. If your network is blocking
+  that, set `KUMO_SKIP_SUBSTORE=1` for a quick rebuild while you work on
+  something unrelated.
+- **Old derived data** — Xcode caches can survive a Swift toolchain
+  upgrade. `make clean && make swift-build` clears them.
+- **You're on an Intel Mac** — Kumo v1 is Apple Silicon only. The build
+  will succeed, but several runtime features are gated on `arm64`.
+
+## Inner loop tips
+
+- For UI changes, use `make dev`. It's the fastest way to see your edit
+  land in the actual `.app`.
+- For CLI changes, `make run-cli ARGS="..."` is faster than rebuilding
+  the app.
+- For `KumoCoreKit` changes, write a unit test in `Tests/KumoCoreTests`
+  and run `swift test`. The test target is intentionally lightweight and
+  starts quickly.
+- Keep `tail -F ~/Library/Application Support/Kumo/logs/core.log` open
+  in a side terminal — it's the single best view into what Mihomo is
+  actually doing.

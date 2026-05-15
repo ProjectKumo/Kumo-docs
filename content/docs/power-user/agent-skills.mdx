@@ -1,0 +1,103 @@
+---
+title: Agent Skills
+description: Let your coding agent control Kumo through a small, safe, well-described command surface.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+Modern coding agents (Cursor, Claude Code, Codex, Gemini Code Assist,
+Agents.md-style configs) read **skill files** from well-known
+directories so they know what they can do in your environment.
+
+Kumo ships a bundled skill — `kumo-cli` — that teaches an agent:
+
+- The JSON envelope shape (`ok`, `data`, `error`).
+- The safe set of commands the agent should use.
+- The `--dry-run` convention for anything that writes system state.
+- Where to look for logs when something goes wrong.
+
+The skill keeps agents on rails: they can ask Kumo about state, switch
+nodes, refresh subscriptions, and inspect logs, but they cannot escape
+into arbitrary shell.
+
+## Install the skill
+
+### From the GUI
+
+The first-launch onboarding sheet asks which agents you want to enable.
+You can also run it later from
+**Settings → General → Agent Skills**, or from the **Agent Skills**
+destination in the sidebar.
+
+For each supported agent, you can pick:
+
+- **Global** — install into the agent's user-wide skill directory.
+- **Project** — install into the current project (limited to agents
+  that support per-project skills).
+
+Each row shows the destination path, whether the skill is currently
+installed, and whether it is up-to-date with the version inside the
+running Kumo.
+
+### From the CLI
+
+```bash
+kumo skills status --json
+kumo skills install --agent claude --scope global
+kumo skills install --agent all
+kumo skills install --agent cursor --scope project --dry-run --json
+kumo skills uninstall --agent cursor --scope project
+```
+
+`--agent` accepts `cursor`, `claude`, `codex`, `gemini`, `agents`, or
+`all`. `--agent all --scope project` only targets agents that support
+project scope.
+
+## Where each skill lives
+
+| Agent       | Global path                                 | Project path                  |
+| ----------- | ------------------------------------------- | ----------------------------- |
+| Cursor      | `~/.cursor/agents/kumo-cli`                 | `./.cursor/agents/kumo-cli`   |
+| Claude Code | `~/.claude/skills/kumo-cli`                 | `./.claude/skills/kumo-cli`   |
+| Codex       | `~/.codex/skills/kumo-cli`                  | — (not supported)             |
+| Gemini      | `~/.gemini/skills/kumo-cli`                 | — (not supported)             |
+| agents.md   | `~/agents/kumo-cli`                         | `./agents/kumo-cli`           |
+
+## Non-destructive by default
+
+If a skill directory exists at the destination but Kumo did not write
+it (for example you cloned a colleague's setup), install fails with a
+clear error. Pass `--force` to overwrite — Kumo first moves the
+existing directory aside.
+
+Uninstall is similarly conservative: only entries Kumo recorded as its
+own are removed. Anything else stays.
+
+<Callout type="info">
+Re-running install after a Kumo update brings the skill content
+up-to-date. Until you do, the agent will still work — it just won't
+know about whatever Kumo learned in the new version.
+</Callout>
+
+## The skill itself
+
+The skill is a small Markdown bundle that teaches the agent to call
+`kumo` for everything. The agent doesn't need any Kumo-specific code
+inside its prompt — the skill is the contract.
+
+You can read the bundle that ships with your current Kumo by opening:
+
+```bash
+open "$(kumo skills status --json | jq -r '.targets[0].destinationRoot')"
+```
+
+(Or browse to the relevant path above for your agent.)
+
+## Cleanup
+
+```bash
+kumo skills uninstall --agent all
+```
+
+Removes every skill Kumo wrote. Untracked entries — for example a
+hand-edited copy of the skill — are left in place.

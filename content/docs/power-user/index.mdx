@@ -1,0 +1,64 @@
+---
+title: Power User
+description: For people who want to script, script-around, and reach into Kumo from the rest of macOS.
+---
+
+import { Cards, Card } from 'fumadocs-ui/components/card';
+
+The Power User track is for when the GUI is no longer enough — or when
+the GUI is great, but you want to wire Kumo into Shortcuts, Spotlight,
+a coding agent, or your own shell scripts.
+
+Everything here is built on top of the same `KumoCoreKit` facade the
+GUI uses, so the GUI and the command line always agree on state.
+
+## What's in this track
+
+<Cards>
+  <Card title="Command line"
+        description="Install the kumo CLI, run it from anywhere, get tab-completion."
+        href="/docs/power-user/command-line" />
+  <Card title="CLI reference"
+        description="Every command, every flag. Predictable JSON output for scripts and agents."
+        href="/docs/power-user/cli-reference" />
+  <Card title="Profiles deep dive"
+        description="Local YAML, remote subscriptions, refresh policy, useProxy."
+        href="/docs/power-user/profiles-deep-dive" />
+  <Card title="Overrides"
+        description="Tweak a subscription without forking it. Merge operators, examples, gotchas."
+        href="/docs/power-user/overrides" />
+  <Card title="Sub-Store (advanced)"
+        description="Host your own Sub-Store backend and point Kumo at it."
+        href="/docs/power-user/sub-store-advanced" />
+  <Card title="Automation"
+        description="Shortcuts, App Intents, Spotlight, Services."
+        href="/docs/power-user/automation" />
+  <Card title="Agent skills"
+        description="Let your coding agent control Kumo safely."
+        href="/docs/power-user/agent-skills" />
+  <Card title="Keyboard shortcuts"
+        description="Every key Kumo listens to."
+        href="/docs/power-user/keyboard-shortcuts" />
+  <Card title="File locations"
+        description="Where Kumo stores data, what each file means."
+        href="/docs/power-user/file-locations" />
+  <Card title="Permissions"
+        description="What macOS asks for and why, plus what Kumo deliberately does not do."
+        href="/docs/power-user/permissions" />
+  <Card title="Auto updates"
+        description="How the update flow works under the hood, channels, manifests."
+        href="/docs/power-user/auto-updates" />
+</Cards>
+
+## Conventions you will see in this track
+
+- Code examples are real commands. You can copy and run them.
+- JSON examples are the actual output shape — `{ ok, data?, error? }`
+  — that scripts and agents can branch on.
+- Where the GUI does the same thing, the page links back to the
+  [For Everyone](/docs/for-everyone) version so you can hand it to a
+  colleague.
+
+If something here gets too deep and you want the engineering view of
+*why* Kumo does it that way, jump to
+[Contributing](/docs/contributing).

@@ -1,0 +1,84 @@
+---
+title: License
+description: AGPL-3.0-only, plus how it interacts with third-party components Kumo uses.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+Kumo is licensed under the
+**GNU Affero General Public License version 3.0 only (AGPL-3.0-only)**.
+
+The full text is at
+[LICENSE](https://github.com/ProjectKumo/KumoApp/blob/main/LICENSE).
+
+## What that means in practice
+
+If you ship a modified Kumo — including over a network service — you must:
+
+1. Make your modified source code available to users.
+2. Keep the AGPL-3.0-only license on the result.
+3. Preserve copyright notices.
+
+If you only use Kumo personally, the licence does not require you to
+publish anything.
+
+If you fork to contribute back to upstream, you're already covered: your
+PR carries the same license as the rest of the project.
+
+## Contributor licensing
+
+By opening a pull request you agree that your contribution is licensed
+under AGPL-3.0-only on the same terms as the rest of the project. We do
+not require a separate CLA.
+
+If your employer claims rights to your work, please sort that out before
+submitting. We can't accept a PR that the contributor doesn't have the
+right to license.
+
+## Third-party components
+
+Kumo bundles or talks to several upstream projects. Each is under its
+own license:
+
+- **[Mihomo](https://github.com/MetaCubeX/mihomo)** — the proxy core.
+  GPL-3.0. Kumo spawns it as a child process; it is **not** statically
+  linked.
+- **[Sub-Store](https://github.com/sub-store-org/Sub-Store)** — the
+  subscription-management sidecar. Distributed under its own terms.
+  Kumo bundles a Node runtime and the generated `sub-store.bundle.js`.
+- **[swift-argument-parser](https://github.com/apple/swift-argument-parser)**
+  — Apache 2.0.
+- **[Yams](https://github.com/jpsim/Yams)** — MIT.
+
+Aggregated notices live in
+[docs/THIRD_PARTY_NOTICES.md](https://github.com/ProjectKumo/KumoApp/blob/main/docs/THIRD_PARTY_NOTICES.md).
+
+<Callout type="warn">
+"Bundles" is doing real work in that list. If you're publishing a
+modified Kumo, please re-check each upstream's terms — the obligations
+are not all identical.
+</Callout>
+
+## What you can't do
+
+The AGPL exists to keep modifications open. A few things that go against
+the spirit (and likely against the letter) of the licence:
+
+- Shipping a closed-source fork of Kumo.
+- Removing the AGPL notice or copyright headers.
+- Re-publishing Kumo's source under a different licence.
+- Using "Kumo", "KumoApp", or the Kumo logo to imply endorsement of a
+  derivative project. Use a different name and your own branding for
+  your fork.
+
+## What you can do
+
+- Build Kumo from source.
+- Modify it for personal or internal use.
+- Share patches via pull request.
+- Run a private build for a team, with the source available to that team.
+- Operate Kumo on someone else's behalf — provided you offer the source
+  of your modifications to those users.
+
+If you're unsure whether your use case is OK, ask in a discussion or
+issue. We'd rather help than litigate.

@@ -1,0 +1,90 @@
+---
+title: Sub-Store
+description: One place to keep multiple subscriptions, merge them, and feed Kumo a single tidy profile.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+If you only have one subscription, you can skip this page. The simple
+flow on the [Add your subscription](/docs/for-everyone/first-connection)
+page is plenty.
+
+If you juggle **two or more** subscriptions — for example a fast one
+and a backup, or one per region — Kumo bundles a small companion app
+called **Sub-Store** that keeps them all in one place and lets you mix
+and match.
+
+## What Sub-Store is for
+
+- Hold several subscription URLs in one place.
+- Combine them into a single output (one merged proxy list).
+- Apply small tweaks (rename groups, filter nodes by keyword) without
+  editing YAML by hand.
+- Hand the output to Kumo as a profile, the same way a regular
+  subscription does.
+
+It is not strictly required. Many users live happily with one
+subscription and never open Sub-Store.
+
+## Open Sub-Store
+
+Click **Sub-Store** in the Kumo sidebar. The first time you open it,
+Kumo prepares the bundled backend in the background and shows the
+Sub-Store interface in a native panel.
+
+You see two main tabs:
+
+- **Subscriptions** — your raw subscription URLs.
+- **Combined** — outputs that merge one or more subscriptions.
+
+## Add a subscription to Sub-Store
+
+1. Go to the **Subscriptions** tab.
+2. Click **Add subscription**.
+3. Paste the URL, give it a name, and pick the right **format**
+   (almost always **Clash**).
+4. Save.
+
+Sub-Store fetches the subscription and shows the node count.
+
+## Combine subscriptions
+
+1. Go to the **Combined** tab.
+2. Click **Add combination**.
+3. Pick which subscriptions to include.
+4. Optional: filter or rename nodes.
+5. Save.
+
+Each combination gets its own URL that looks like
+`http://127.0.0.1:.../share/...`. That URL is what you paste into Kumo
+as a profile.
+
+## Feed Sub-Store output to Kumo
+
+1. Copy the Sub-Store share URL for your combination.
+2. In Kumo, go to **Profiles → +**.
+3. Paste the URL.
+4. Save.
+
+Kumo now has a profile that always reflects the current Sub-Store
+output. Refreshing the profile in Kumo refreshes the merged result.
+
+<Callout type="info">
+Sub-Store runs **locally** as long as Kumo is running. The share URL
+only works on your own Mac — nothing is exposed to the wider internet.
+</Callout>
+
+## Want to use your own Sub-Store backend?
+
+Some users prefer to host Sub-Store themselves (on a NAS, a VPS, or in
+a container) and have multiple devices share it. Kumo supports custom
+Sub-Store backends — see
+[Sub-Store (advanced)](/docs/power-user/sub-store-advanced) in the
+Power User track.
+
+## What's next
+
+- Profiles are the bridge between Sub-Store and Kumo:
+  [Add your subscription](/docs/for-everyone/first-connection).
+- Or hop over to [Power User](/docs/power-user) for custom backends and
+  finer-grained merge control.

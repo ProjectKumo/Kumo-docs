@@ -1,0 +1,15 @@
+{
+  "title": "For Everyone",
+  "description": "Plain-language guides for getting Kumo running.",
+  "pages": [
+    "index",
+    "install",
+    "first-connection",
+    "everyday",
+    "switching-modes",
+    "sub-store",
+    "updating",
+    "troubleshooting",
+    "faq"
+  ]
+}

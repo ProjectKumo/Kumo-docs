@@ -1,0 +1,118 @@
+---
+title: Release Process
+description: How a Kumo release is built, signed, and shipped to users.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+You probably don't need to know this to contribute. But it helps to
+understand the cycle when you're asking "when does my fix ship?"
+
+## Channels
+
+Kumo publishes two release channels from a single repository:
+
+| Channel | Audience | Manifest |
+| --- | --- | --- |
+| **stable** | Default. Updated on confirmed releases. | `https://github.com/ProjectKumo/KumoApp/releases/latest/download/latest.yml` |
+| **beta** | Opt-in. Updated more often, less filtered. | `https://github.com/ProjectKumo/KumoApp/releases/download/pre-release/latest.yml` |
+
+Users pick their channel in **Settings → Updates → Update channel**.
+
+## What goes into a release
+
+Each release ships:
+
+- A notarized **DMG** built from a Release configuration `.app`.
+- A `latest.yml` **manifest** with `version`, `channel`, `downloadURL`,
+  `assetName`, `sha256`, and `releaseNotes`.
+- A **GitHub Release** page that links the DMG and pastes the release
+  notes.
+
+The DMG is built by running:
+
+```bash
+make release-dmg VERSION=0.0.4
+```
+
+This invokes `make app-release` followed by
+`Scripts/make_release_artifacts.sh`. The script:
+
+1. Compresses `Kumo.app` into the DMG.
+2. Computes a SHA-256 of the DMG.
+3. Writes `build/release/latest.yml` with that SHA-256.
+
+The artefacts then get uploaded to a GitHub Release. For stable, the
+release is tagged `vX.Y.Z`. For beta, it's tagged `pre-release` (a
+moving tag).
+
+## Version numbers
+
+We use `MAJOR.MINOR.PATCH` (semver-ish):
+
+- **PATCH** for bug fixes and small tweaks.
+- **MINOR** for new features that don't change the JSON contract.
+- **MAJOR** is reserved for breaking changes to the CLI envelope or
+  state schema.
+
+Build number is incremented every CI build; users don't usually see it,
+but `kumo --version` includes it for diagnosis.
+
+## What the user sees
+
+Every five minutes, the running Kumo asks the channel's manifest whether
+there's a newer version. When there is:
+
+1. A native macOS notification appears with
+   **Install Now / Remind Me Later / Restart Now**.
+2. The download writes to
+   `~/Library/Application Support/Kumo/updates/downloads/`.
+3. The detached installer (`app-update-installer.log`) mounts the DMG,
+   copies `Kumo.app` over the current install, and relaunches.
+4. The SHA-256 from the manifest is verified against the downloaded
+   artefact before the installer is invoked. A mismatch aborts the
+   update.
+
+Auto-install requires the current `Kumo.app` parent directory to be
+writable. If it isn't (machine-wide install, locked directory), the app
+reports a clear error and links to the DMG so the user can install
+manually.
+
+## Cutting a release
+
+Maintainer flow:
+
+1. Land all the changes for the release on `main`.
+2. Update `CHANGELOG.md` (or release notes draft).
+3. `make release-dmg VERSION=X.Y.Z`.
+4. Sign and notarize via the existing CI workflow.
+5. Create a GitHub Release, attach the DMG and `latest.yml`, paste the
+   notes.
+6. For stable, ensure `latest` tag points at the new tag. For beta,
+   force the `pre-release` tag forward.
+7. Verify users get the prompt — install on a test Mac with the prior
+   stable, wait five minutes, confirm the notification.
+
+A botched release manifest is the worst kind of bug. Always verify the
+update flow end-to-end on a real machine before announcing.
+
+## Hosting a private feed
+
+The manifest format is documented in
+[Auto Updates](/docs/power-user/auto-updates). Any static-file host that
+serves HTTPS works for a private feed: S3, R2, GitHub Pages, nginx, etc.
+
+## What does *not* ship in a release
+
+- **Mihomo binaries.** Kumo downloads a managed Mihomo on demand. We do
+  not freeze a Mihomo version inside the DMG.
+- **User profiles or overrides.** Releases are stateless. Local state at
+  `~/Library/Application Support/Kumo/` carries across upgrades.
+- **Agent skill files in user directories.** The bundled skill content
+  lives inside the app; users explicitly install it via Settings →
+  Agent Skills.
+
+<Callout type="info">
+If your fix needs to ship sooner than the next stable, ask in your PR.
+We can cherry-pick into a patch release when the situation warrants it.
+</Callout>
