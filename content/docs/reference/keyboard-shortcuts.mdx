@@ -1,0 +1,61 @@
+---
+title: Keyboard Shortcuts
+description: Every keyboard shortcut the macOS app responds to.
+---
+
+The Kumo app uses `CommandMenu` and `CommandGroup` so every keyboard
+shortcut is discoverable from the menu bar.
+
+## Lifecycle
+
+| Action      | Shortcut                   |
+| ----------- | -------------------------- |
+| Start Kumo  | `Shift` + `Command` + `S`  |
+| Stop Kumo   | `Command` + `.`            |
+| Refresh     | `Command` + `R`            |
+
+## Outbound Mode
+
+| Action  | Shortcut          |
+| ------- | ----------------- |
+| Rule    | `Command` + `1`   |
+| Global  | `Command` + `2`   |
+| Direct  | `Command` + `3`   |
+
+## Navigation
+
+| Action            | Shortcut                                            |
+| ----------------- | --------------------------------------------------- |
+| Toggle Sidebar    | `Command` + `Control` + `S`                         |
+| Daily destinations | `Cmd` + `Option` + `0..9` (assigned in order)      |
+| Inspect destinations | Continued in the same range                      |
+
+The `Navigate` command menu lists every keyboard-accessible jump so you can
+read the active assignments at a glance. The implementation routes through
+the SwiftUI navigation state without moving it into `KumoCoreKit`.
+
+## App Window
+
+| Action           | Shortcut          |
+| ---------------- | ----------------- |
+| Settings…        | `Command` + `,`   |
+| Hide Kumo        | `Command` + `H`   |
+| Hide Others      | `Option` + `Cmd` + `H` |
+| Close Window     | `Command` + `W`   |
+| Minimize         | `Command` + `M`   |
+| Quit Kumo        | `Command` + `Q`   |
+
+The last group is provided by macOS and applies to every Mac app.
+
+## Accessibility
+
+All icon-only controls have meaningful labels via `Label` so VoiceOver
+reads them clearly. Tooltips also use the same labels. The app preserves
+keyboard access for start, stop, refresh, mode switching, list navigation,
+filtering, and destructive confirmation.
+
+`KumoUIComponents.swift` exposes `kumoSubtleBackground(in:)` and
+`kumoAdaptiveTextWeight(...)` helpers that read `colorSchemeContrast` and
+`legibilityWeight` from the environment so custom hairlines, pill
+backgrounds, and non-standard font weights still respond to **Increase
+Contrast** and **Bold Text** preferences.

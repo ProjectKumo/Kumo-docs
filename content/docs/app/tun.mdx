@@ -1,0 +1,60 @@
+---
+title: TUN
+description: Configure Mihomo TUN mode with stack, routing, MTU, DNS hijack, and route exclusions.
+---
+
+The **TUN** destination configures Mihomo's TUN device — a virtual `utun*`
+interface that routes selected traffic through the proxy core. Kumo owns the
+top-level `tun` and `dns` blocks in the generated runtime configuration when
+TUN is enabled, so what you see in the form is what Mihomo runs.
+
+## Enable Toggle
+
+Use the master `Toggle` on the Overview pane or in the form to turn TUN on
+and off. The toggle is an immediate runtime action; advanced settings stage
+through an **Apply** action.
+
+<Callout type="warn" title="TUN needs a privileged owner">
+  TUN requires a privileged owner of the `utun` device. Until the Kumo Helper
+  service mode ships, TUN enable requests fail with a visible service-mode
+  error rather than leaving the UI in a misleading "On" state. macOS does
+  **not** show a "Allow VPN Configuration" prompt — Kumo never registers a
+  NetworkExtension.
+</Callout>
+
+## Settings
+
+| Setting              | What it controls                                                                                                                |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| Stack                | `system` or `gvisor`. Affects performance and routing behavior.                                                                 |
+| Auto Route           | Whether Mihomo installs default routes through the TUN interface.                                                               |
+| Auto Detect Interface| Lets Mihomo pick the underlying interface dynamically.                                                                          |
+| Strict Route         | Tightens route ownership so other tools cannot accidentally override TUN.                                                       |
+| Device Name          | A `utun*` name to bind. Kumo only writes the value if it already starts with `utun` (matching macOS's virtual interface naming).|
+| MTU                  | Maximum transmission unit for the virtual interface.                                                                            |
+| DNS Hijack           | Targets to redirect through Mihomo's DNS resolver (e.g. `tcp://any:53`, `udp://any:53`).                                        |
+| Route Exclusions     | Subnets that should bypass TUN.                                                                                                 |
+| ICMP Forwarding      | Whether ICMP packets should be forwarded by the TUN stack.                                                                      |
+
+Kumo also writes a paired `dns:` block when TUN is enabled, so the
+running core's DNS settings match the form (resolver, fake-IP range, nameservers).
+
+## Apply Semantics
+
+Mihomo expects interface-level TUN settings to be loaded from the runtime
+YAML rather than patched piecemeal. Applying TUN edits therefore:
+
+1. Persists the new settings to `CoreRuntimeSettings.tun` and `state.json`.
+2. Regenerates the runtime configuration under `work/config.yaml`.
+3. **Restarts the core** when Mihomo is currently running so the actual TUN
+   interface state matches the form.
+
+If the core is stopped, the restart step is skipped and changes apply on the
+next start.
+
+## See Also
+
+- [Mihomo Runtime](/docs/reference/file-paths#runtime-configuration) — where the generated YAML lives.
+- [System Proxy](/docs/app/system-proxy) — the orthogonal way to capture
+  traffic. You can use System Proxy and TUN together, but typically you pick
+  one as the primary capture method.

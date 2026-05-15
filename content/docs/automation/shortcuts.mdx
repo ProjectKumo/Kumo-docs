@@ -1,0 +1,59 @@
+---
+title: Shortcuts and App Intents
+description: Drive Kumo from Shortcuts, Siri, and Spotlight with App Intents that share state with the GUI.
+---
+
+Kumo exposes five `App Intents` so Shortcuts, Siri, and Spotlight can drive
+the app without spawning a CLI process. They all require the full
+`Kumo.app` bundle (not `swift run`).
+
+## Available Intents
+
+| Intent                       | What it does                                                       |
+| ---------------------------- | ------------------------------------------------------------------ |
+| **Start Kumo**               | Starts Mihomo through `KumoController.start()`.                    |
+| **Stop Kumo**                | Stops Mihomo through `KumoController.stop()`.                      |
+| **Refresh Kumo**             | Re-reads state, profile metadata, and proxy groups.                |
+| **Set Kumo Mode**            | Switches the outbound mode. Parameter: `Rule`, `Global`, `Direct`. |
+| **Toggle Kumo System Proxy** | Turns macOS system proxy on or off. Parameter: `enable: Bool`.     |
+
+The intents resolve the live `KumoAppStore` via `KumoAppContext.shared.store`,
+so their side-effects are identical to triggering the same flow from the
+GUI.
+
+## Adding A Shortcut
+
+1. Open **Shortcuts.app** on macOS.
+2. Click **+** to add a shortcut.
+3. Search for "Kumo" — every intent shows up under the Kumo app.
+4. Drag an action into the workflow, configure parameters if any, and save.
+
+You can chain intents the same way you would with any other Shortcuts
+action. For example:
+
+> If it's 22:00, Set Kumo Mode to Direct → Stop Kumo.
+
+## From Siri
+
+Once an intent is in a saved shortcut, Siri can run it by name (e.g. "Hey
+Siri, run Stop Kumo"). The shortcut name is what Siri matches against.
+
+## From Spotlight
+
+Spotlight surfaces intents directly as well. Type "Set Kumo Mode" into
+Spotlight and pick the action; macOS prompts for parameters and runs it.
+
+## Notes
+
+- `KumoModeChoice` is a local mirror of `OutboundMode`. App Intents metadata
+  extraction cannot see enums declared in another SPM module, so the intent
+  schema uses the mirror.
+- When the helper service mode ships, intents will hit service endpoints
+  rather than `KumoAppStore` directly, so they keep working when the GUI
+  is closed.
+
+## See Also
+
+- [Menu bar](/docs/app/menu-bar) — the same actions exposed as a native menu.
+- [Keyboard shortcuts](/docs/reference/keyboard-shortcuts) — the same actions
+  exposed as in-app shortcuts.

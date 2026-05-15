@@ -1,0 +1,17 @@
+{
+  "pages": [
+    "index",
+    "---Get Started---",
+    "getting-started",
+    "---Use Kumo---",
+    "app",
+    "cli",
+    "profiles",
+    "---Automation---",
+    "automation",
+    "---Reference---",
+    "reference",
+    "troubleshooting",
+    "faq"
+  ]
+}

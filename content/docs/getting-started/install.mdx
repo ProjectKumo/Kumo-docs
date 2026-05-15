@@ -1,0 +1,73 @@
+---
+title: Install Kumo
+description: Install the signed app bundle or build Kumo and the kumo CLI from source.
+---
+
+## Install The App Bundle
+
+The recommended way to install Kumo is the signed `.app` bundle distributed
+through [GitHub Releases](https://github.com/ProjectKumo/KumoApp/releases).
+
+1. Download the latest `Kumo-macos-<version>-arm64.dmg` from the release page.
+2. Open the DMG and drag **Kumo.app** to the **Applications** alias inside the
+   installer window.
+3. Launch Kumo from `/Applications`. macOS will Gatekeeper-check the signed
+   bundle on first launch.
+
+<Callout title="Why /Applications?">
+  macOS launch services require the app to live in `/Applications` for *Open at
+  Login* to register correctly. Installing elsewhere also disables in-place
+  automatic updates because the update flow needs a writable parent directory.
+</Callout>
+
+### Release Channels
+
+Kumo publishes updates through GitHub Releases:
+
+- **Stable** updates read
+  `https://github.com/ProjectKumo/KumoApp/releases/latest/download/latest.yml`.
+- **Beta** updates read
+  `https://github.com/ProjectKumo/KumoApp/releases/download/pre-release/latest.yml`.
+
+The Settings → Updates tab can switch channels or point at a private manifest
+URL. Leave the override blank to use the default feed.
+
+## Build From Source
+
+Building locally is supported and gives you the same `.app` bundle the signed
+release ships. You need [Xcode 16+ with Swift 6](/docs/getting-started/requirements#for-building-from-source).
+
+```bash
+git clone https://github.com/ProjectKumo/KumoApp.git
+cd KumoApp
+
+# Generate Kumo.xcodeproj from project.yml
+make generate
+
+# Build the .app bundle and open it
+make dev
+```
+
+Other useful targets:
+
+| Command                  | What it does                                                |
+| ------------------------ | ----------------------------------------------------------- |
+| `make swift-build`       | `swift build` (debug, no `.app` bundle).                    |
+| `make build-release`     | `swift build -c release` (debug bundle, no signing).        |
+| `make run-app`           | Launch the SwiftUI app directly (development smoke test).   |
+| `make run-cli ARGS="…"`  | Run the `kumo` CLI built from source.                       |
+| `make app`               | `xcodebuild Debug` — produces `Kumo.app` (debug).           |
+| `make app-release`       | `xcodebuild Release` — produces a release `.app` bundle.    |
+| `make release-dmg`       | Build the release DMG and `latest.yml` manifest.            |
+| `make check`             | Build + test + verify `kumo status --json`.                 |
+
+<Callout type="warn" title="swift run is for development only">
+  `swift run kumo` is a source-tree smoke test. App Intents, Spotlight, the
+  Services menu, and the menu bar status item all require the full `Kumo.app`
+  bundle produced by `make app` (or the signed release DMG).
+</Callout>
+
+## Next Steps
+
+- [Walk through first-run onboarding →](/docs/getting-started/first-run)
+- [Install the kumo CLI on PATH →](/docs/getting-started/command-line-tool)

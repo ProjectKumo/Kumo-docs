@@ -1,0 +1,113 @@
+---
+title: Logging
+description: Log levels, redaction, debug log files, and timing output for the kumo CLI.
+---
+
+Kumo follows npm-style log conventions so the CLI feels familiar.
+
+## Log Levels
+
+The order from quietest to loudest:
+
+```text
+silent < error < warn < notice < http < info < verbose < silly
+```
+
+The default is `notice`. You can change it with `--loglevel <level>`:
+
+```bash
+kumo status --loglevel silent
+kumo status -d                # same as --loglevel info
+kumo status --silent          # same as --loglevel silent
+kumo status --verbose         # same as --loglevel verbose
+```
+
+## stdout vs stderr
+
+- **Command results** go to **stdout**. In `--json` mode, stdout is plain
+  JSON only.
+- **Logs, warnings, progress, timing summaries, and debug log paths** go to
+  **stderr**.
+
+Pipelines such as `kumo status --json | jq` work cleanly because the JSON
+envelope is never mixed with log output.
+
+## Terminal Styling
+
+Text mode applies light ANSI styling only when stdout/stderr are interactive
+TTYs. Styling is disabled when:
+
+- Output is piped or redirected.
+- `--json` is used.
+- `NO_COLOR` is set.
+- `CLICOLOR=0` is set.
+- `--color never` is passed.
+
+`--color always|auto|never` defaults to `auto`. Visible status labels are
+ASCII, so color is never the only signal:
+
+| Label        | Meaning                       |
+| ------------ | ----------------------------- |
+| `[ok]`       | Healthy success.              |
+| `[warn]`     | Warning or partial readiness. |
+| `[error]`    | Failure.                      |
+| `[dry-run]`  | Preview, not executed.        |
+
+## Debug Logs
+
+Each `kumo` invocation can write a per-process debug log file:
+
+```text
+~/Library/Application Support/Kumo/logs/cli/<timestamp>-kumo-debug-0.log
+```
+
+`--logs-dir <path>` overrides the directory. `--logs-max <count>` controls
+retention; `--logs-max=0` disables debug log files entirely (useful in
+sensitive environments).
+
+To see what's in there from the CLI:
+
+```bash
+kumo logs cli --limit 20 --json
+kumo logs path
+kumo logs clean --dry-run --json
+```
+
+## Timing
+
+`kumo --timing` writes a sibling timing file:
+
+```text
+~/Library/Application Support/Kumo/logs/cli/<timestamp>-kumo-timing.json
+```
+
+In text mode, `--timing` also prints a short summary to stderr. Timing files
+are intended for performance diagnostics and should not be mixed with
+runtime event streams.
+
+## Redaction
+
+Before writing terminal or file logs, CLI diagnostics are run through a
+redactor that masks:
+
+- Profile URL tokens.
+- Controller secrets.
+- Authorization headers.
+- Basic auth passwords.
+- Subscription tokens and token-like query parameters.
+
+<Callout type="warn" title="Redaction is a safety net">
+  Redaction is best-effort. Always review logs for hostnames, IP addresses,
+  and identifiers a redactor cannot recognize before sharing them publicly.
+</Callout>
+
+## Mihomo Runtime Logs
+
+`kumo logs runtime` reads Mihomo's own log stream:
+
+```bash
+kumo logs runtime --limit 200 --level info --json
+```
+
+These are separate from CLI debug logs. The full transcript is on disk at
+`logs/core.log`. See [Logs](/docs/app/logs) for the matching GUI surface.

@@ -1,0 +1,59 @@
+---
+title: Local Profiles
+description: Use a Mihomo or Clash YAML file from your disk as a Kumo profile.
+---
+
+A **local profile** is any Mihomo or Clash YAML file you point Kumo at.
+Refresh re-reads the file from disk — there is no network call.
+
+## Add A Local Profile
+
+From the GUI:
+
+1. Open **Profiles → Add → Local**.
+2. Pick the file with the standard macOS `fileImporter`.
+3. Set the display name and an optional auto-update interval (auto-update
+   for local profiles is a periodic re-read, useful when you sync a file
+   from a script).
+
+Kumo records the file path in metadata and refreshes from it whenever you
+press **Refresh** on the row or the Overview Profile card.
+
+## Where The File Lives
+
+Kumo references the file at its original location — it does **not** copy
+the YAML into its own application support directory. The path you select is
+stored in `profiles/profiles-metadata.json`.
+
+If you move or delete the file, refresh will fail with a clear error
+message. Re-import the profile if you need to point Kumo somewhere new.
+
+## CLI
+
+You can also import profiles from a path with the CLI surface exposed by
+`KumoController.importProfile(from:)`. The full CLI subcommand layout for
+profile import is being finalized; until then the supported paths are:
+
+```bash
+# Refresh a profile by id (local or remote)
+kumo profile refresh <id>
+
+# Refresh a remote URL and import if missing
+kumo profile refresh "https://example.com/sub.yaml"
+
+# Refresh every due profile based on its auto-update interval
+kumo profile refresh-due
+```
+
+## Hand-editing
+
+The v1 GUI intentionally does not expose YAML editing. If you need to
+hand-edit a local profile, do it in a text editor on the file you imported
+and then **Refresh** in Kumo. Save the file before refresh — Kumo always
+re-reads the disk copy when it refreshes.
+
+## See Also
+
+- [Remote profiles](/docs/profiles/remote)
+- [Overrides](/docs/profiles/overrides) — layer changes on top of a local
+  profile without editing the source.

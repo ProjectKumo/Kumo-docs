@@ -1,0 +1,52 @@
+---
+title: Services and Spotlight
+description: Import profiles from the macOS Services menu and jump to a profile from Spotlight.
+---
+
+Two small but useful macOS integrations are wired up to Kumo's profile
+system.
+
+## Services Menu — Import Profile
+
+Kumo registers a single Services entry:
+
+```text
+Services → Import Profile to Kumo
+```
+
+It is declared in `Info.plist` as part of `NSServices`. Sending text or a
+URL through it calls `importProfileURL(_:userData:error:)` on the
+AppDelegate, which routes the pasteboard payload into
+`KumoAppStore.importRemoteProfile(urlString:useProxy:)`.
+
+You can trigger it from anywhere that has a Services menu:
+
+1. Highlight a subscription URL in any app.
+2. Right-click → **Services → Import Profile to Kumo**.
+
+Kumo brings the main window to the front and starts the import. If the URL
+is already known, the existing profile is refreshed in place.
+
+## Spotlight Handoff
+
+`SpotlightIndexer` indexes profile summaries (name and source) into the
+default `CSSearchableIndex` on launch and after every profile refresh. Each
+entry uses the profile id as `uniqueIdentifier`. Tapping a Kumo result in
+Spotlight returns you to Kumo and selects the matching profile via
+`KumoAppContext.handleUserActivity(_:)`.
+
+`NSUserActivityTypes` declares `io.kumo.KumoApp.openProfile` so the activity
+type is recognized.
+
+## Quick Tips
+
+- Spotlight indexes profile **names**, so renaming a profile to something
+  recognizable makes it findable from Spotlight.
+- The Services menu is the easiest way to take a subscription URL from a
+  browser or a chat app directly into Kumo without copy-pasting through
+  the GUI.
+
+## See Also
+
+- [Profiles](/docs/app/profiles) — what happens after import.
+- [App Intents](/docs/automation/shortcuts) — control Kumo without a window.

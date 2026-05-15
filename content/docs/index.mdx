@@ -1,0 +1,59 @@
+---
+title: Welcome to Kumo
+description: A calm native macOS client for the Mihomo proxy core, with a SwiftUI app and an agent-friendly CLI.
+---
+
+Kumo is a Mac utility for connecting quickly without turning everyday proxy
+management into a network operations dashboard. The first screen is designed to
+answer four questions at a glance:
+
+- Is Kumo connected?
+- Which outbound mode is active?
+- Is the macOS system proxy enabled?
+- Which profile and proxy group are currently in use?
+
+Advanced capabilities — DNS, TUN, rule providers, logs, overrides, and
+Sub-Store — stay discoverable in dedicated sections, so daily use remains
+focused.
+
+## What Kumo Is
+
+| Area              | What Kumo provides                                                              |
+| ----------------- | ------------------------------------------------------------------------------- |
+| Native macOS app  | SwiftUI interface around `NavigationSplitView`, Settings, and a status item.    |
+| Shared core       | `KumoCoreKit` owns Mihomo lifecycle, profile generation, controller, and state. |
+| CLI for everyone  | `kumo` supports stable command names, `--json`, dry-run, and predictable exits. |
+| Mihomo discovery  | Bring your own binary, use Homebrew, or let Kumo install a managed core.        |
+| Safe defaults     | Empty profiles produce a direct config; system proxy changes can be previewed.  |
+
+## Where To Start
+
+<Cards>
+  <Card
+    title="Install Kumo"
+    href="/docs/getting-started/install"
+    description="Requirements, download, and first-run setup on macOS 15+."
+  />
+  <Card
+    title="Take the app tour"
+    href="/docs/app"
+    description="Daily, Inspect, and Configure — what each destination does."
+  />
+  <Card
+    title="Use the CLI"
+    href="/docs/cli"
+    description="Drive Kumo from a terminal or a coding agent with JSON output."
+  />
+  <Card
+    title="Manage profiles"
+    href="/docs/profiles"
+    description="Import local or remote Mihomo / Clash profiles and refresh them."
+  />
+</Cards>
+
+## Stay Calm
+
+Kumo's first version intentionally avoids privileged helpers. System proxy and
+TUN changes use macOS administrator authorization only when they truly need
+elevated privileges, and Kumo never registers a VPN profile. See
+[Permissions](/docs/reference/permissions) for the full list.

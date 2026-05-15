@@ -1,0 +1,43 @@
+---
+title: Exit Codes
+description: The CLI exit codes and the JSON error codes you can branch on.
+---
+
+`kumo` keeps exit codes deliberately small.
+
+## Exit Codes
+
+| Code | Meaning                                                              |
+| ---- | -------------------------------------------------------------------- |
+| `0`  | Success. `ok: true` in the JSON envelope.                            |
+| `1`  | Failure. `ok: false` in the JSON envelope; `error` explains why.     |
+
+Anything beyond `1` is reserved for future use. For agent automation, the
+recommended branch is on the JSON `error.code` field rather than on the
+numeric exit code.
+
+## Common JSON Error Codes
+
+The exact list is stabilizing alongside `KumoCoreKit` errors. Common ones
+you'll see today include:
+
+| `error.code`                  | When it happens                                                              |
+| ----------------------------- | ---------------------------------------------------------------------------- |
+| `CORE_NOT_RUNNING`            | A command needs the Mihomo core to be running.                               |
+| `CORE_NOT_FOUND`              | Kumo couldn't find a Mihomo binary anywhere.                                 |
+| `PROFILE_NOT_FOUND`           | The requested profile id doesn't exist.                                      |
+| `PROFILE_FETCH_FAILED`        | A subscription URL returned an error or refused the connection.              |
+| `PROFILE_PARSE_FAILED`        | The downloaded YAML failed to parse.                                         |
+| `CONTROLLER_REQUEST_FAILED`   | Mihomo's external-controller returned a non-2xx response.                    |
+| `SYSTEM_PROXY_PRECHECK_FAILED`| The target `host:port` is not accepting local TCP connections.               |
+| `TUN_REQUIRES_PRIVILEGED_OWNER` | TUN enable was requested without a helper or privileged process available. |
+| `CLI_LINK_NOT_INSTALLED`      | A CLI-link operation found nothing to remove.                                |
+
+The `details` field on the error can carry structured context (e.g. the
+HTTP status code, the offending URL).
+
+## See Also
+
+- [JSON Mode](/docs/cli/json-mode) — the full envelope structure.
+- [Logging](/docs/cli/logging) — how to capture more context when an error
+  happens.

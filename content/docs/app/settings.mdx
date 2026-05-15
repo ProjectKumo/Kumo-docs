@@ -1,0 +1,69 @@
+---
+title: Settings
+description: The two-tab Settings window — General and Updates. Run setup again, manage the CLI symlink, and pick an update channel.
+---
+
+`SettingsView` is a two-tab `TabView` reserved for **app-level** preferences.
+Runtime status lives in the main window and the status item menu, not here.
+
+## General
+
+The General tab is grouped into three sections.
+
+### Behavior
+
+- **Open at Login** — synced with `SMAppService.mainApp` by
+  `KumoAppDelegate`. Registration only succeeds when `Kumo.app` lives in
+  `/Applications` (a macOS launch services requirement).
+- **Quit when last window closes** — read by
+  `applicationShouldTerminateAfterLastWindowClosed`. When off, closing the
+  window keeps Kumo running so the menu bar status item stays available.
+
+### Setup
+
+- **Run Setup Again** — reopens the four-step onboarding sheet
+  ([First run](/docs/getting-started/first-run)) without resetting
+  `hasCompletedOnboarding`.
+- **Command Line Tool** — install or remove the `/usr/local/bin/kumo`
+  symlink. macOS shows an administrator authorization prompt once per
+  operation. See [Command-line tool](/docs/getting-started/command-line-tool).
+
+### Diagnostics
+
+Open `~/Library/Application Support/Kumo/logs/` directly in Finder for
+escalation or backups. The CLI exposes the same path with `kumo logs path`.
+
+## Updates
+
+The Updates tab controls how Kumo checks for new versions.
+
+| Control                | What it does                                                                                  |
+| ---------------------- | --------------------------------------------------------------------------------------------- |
+| **Channel** picker     | `stable` or `beta`. Drives which `latest.yml` manifest is fetched.                            |
+| **Manifest URL**       | Optional override for the manifest URL. Blank means the default GitHub Releases feed.         |
+| **Check for Updates**  | Triggers an immediate `AppUpdateManager.checkForUpdate(...)`.                                 |
+| **Install**            | Available when an update is staged. Approves the detached DMG installer flow.                 |
+| **Release Notes**      | A link to the GitHub release page for the current download.                                   |
+
+Kumo polls the runtime release manifest every five minutes and posts a
+local notification when an update is available. Notification categories
+include `Install Now`, `Remind Me Later`, and `Restart Now`. See
+[Updates](/docs/reference/updates).
+
+## Storage
+
+Settings persist to `~/Library/Application Support/Kumo/preferences.json`
+through `UserPreferencesStore`. Decoding falls back to defaults, so a missing
+or corrupted file never blocks launch.
+
+| Key                  | Stored value                                                                |
+| -------------------- | --------------------------------------------------------------------------- |
+| `launchAtLogin`      | Bool. Synced with `SMAppService.mainApp`.                                   |
+| `hideMenuBarIcon`    | Bool. Persisted; runtime visibility wiring is planned.                      |
+| `quitOnLastWindowClose` | Bool. Read by `applicationShouldTerminateAfterLastWindowClosed`.         |
+| `updateChannel`      | `stable` or `beta`.                                                         |
+| `updateManifestURL`  | Optional URL string. Blank uses the default GitHub Releases feed.           |
+
+Runtime state — including system proxy state, TUN settings, and Mihomo
+runtime keys — lives in `state.json`, not `preferences.json`. See
+[File paths](/docs/reference/file-paths).

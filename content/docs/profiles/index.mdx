@@ -1,0 +1,79 @@
+---
+title: Profiles
+description: Import, refresh, and layer profiles. How Kumo composes the runtime YAML Mihomo actually runs.
+---
+
+A **profile** in Kumo is a Mihomo / Clash YAML document plus a small piece of
+metadata describing where it came from, when it was last updated, and how
+often Kumo should refresh it.
+
+## In This Section
+
+<Cards>
+  <Card
+    title="Local profiles"
+    href="/docs/profiles/local"
+    description="Add YAML files from disk and refresh them in place."
+  />
+  <Card
+    title="Remote profiles"
+    href="/docs/profiles/remote"
+    description="Subscriptions, auto-update, subscription user info, and credentials."
+  />
+  <Card
+    title="Sub-Store profiles"
+    href="/docs/profiles/sub-store"
+    description="Profiles managed by the bundled Sub-Store backend."
+  />
+  <Card
+    title="Overrides"
+    href="/docs/profiles/overrides"
+    description="Layer your own values on top of a profile without editing it."
+  />
+</Cards>
+
+## How Kumo Composes The Runtime YAML
+
+Whenever the core starts (or you apply runtime settings), Kumo composes a
+single `work/config.yaml` from layered inputs:
+
+1. The selected profile YAML.
+2. Profile-specific overrides.
+3. Global overrides.
+4. **Kumo-controlled runtime settings.** Always last, always wins for
+   controller address, ports, mode, and other Kumo-owned keys.
+
+The merge is structural — Kumo parses the YAML into structured values before
+combining them, so:
+
+- Later overrides recursively merge mapping values.
+- Array and scalar values replace earlier values by default.
+- Sparkle-style sequence operators (`+rules`, `rules+`) and Clash Verge Rev
+  rule operators (`prepend-rules`, `append-rules`, `delete-rules`) are
+  consumed during generation and are not written to the final runtime YAML.
+- Keys ending in `!` replace the target value directly instead of recursively
+  merging nested mappings.
+- Kumo-owned runtime keys are removed from user-provided documents before
+  the Kumo-controlled final layer is appended.
+
+YAML comments and arbitrary formatting are not preserved because the
+generated runtime file is serialized from structured values.
+
+## Default Profile
+
+If no profile has been imported, Kumo returns a minimal direct profile so
+the app starts safely:
+
+```yaml
+proxies: []
+proxy-groups:
+  - name: Proxy
+    type: select
+    proxies:
+      - DIRECT
+rules:
+  - MATCH,DIRECT
+```
+
+Everything routes direct until you add a real profile. The default profile
+is generated on the fly — there is no `default.yaml` on disk you can edit.

@@ -1,0 +1,279 @@
+---
+title: Commands
+description: Every kumo command, grouped by purpose, with examples and JSON output expectations.
+---
+
+This page groups every CLI command by purpose. Commands accept `--json` on
+the output, and write user-readable text otherwise. Add `--help` to any
+command for inline reference.
+
+## Lifecycle
+
+Control the Mihomo core process.
+
+```bash
+kumo start --core /path/to/mihomo
+kumo start                          # discover core automatically
+kumo stop
+kumo restart
+```
+
+`start`, `stop`, and `restart` delegate to the Kumo Helper when it is
+installed and reachable; otherwise they fall back to the local-process
+supervisor.
+
+## Status
+
+Read the current state.
+
+```bash
+kumo status --json
+kumo st                             # alias
+```
+
+`status` returns the JSON envelope with core state, mode, controller
+endpoint, mixed port, system proxy state, runtime settings, last status
+message, and (planned) the CLI link status.
+
+## Outbound Mode
+
+Switch Mihomo's outbound mode.
+
+```bash
+kumo mode rule
+kumo mode global
+kumo mode direct
+```
+
+Setting the mode patches `/configs` on the running core, closes existing
+connections, refreshes proxy groups, and persists the new mode to
+`state.json`.
+
+## Proxies
+
+Inspect and pick proxy nodes.
+
+```bash
+kumo proxies --json                 # all groups and members
+kumo proxy --json                   # alias
+kumo select "Proxy" "HK-01"
+```
+
+`select` requires a `select`-type group. Automated groups (`URLTest`,
+`Fallback`, `LoadBalance`) are read-only — the CLI surfaces the current
+selection but Mihomo controls it.
+
+## Connections
+
+List or close active connections.
+
+```bash
+kumo connections --json
+kumo connections --close <connection-id>
+kumo connections --close-all
+```
+
+Each connection record carries the host, the proxy chain, traffic
+counters, and the originating process metadata (when Mihomo can resolve
+it).
+
+## Providers
+
+Inspect proxy and rule providers.
+
+```bash
+kumo providers --json
+```
+
+Returns counts plus per-provider metadata (name, source, last refresh).
+
+## Runtime Events
+
+Show the in-memory ring buffer of Kumo runtime events.
+
+```bash
+kumo runtime-events --json
+kumo runtime-events --limit 20
+```
+
+Useful when you want to know "what changed" without reading the full
+runtime log. Events include core lifecycle, profile switches, and system
+proxy changes.
+
+## Doctor
+
+Inspect runtime, profile, and core candidates in one call.
+
+```bash
+kumo doctor --json
+```
+
+Returns a single envelope with `status`, `currentProfile`, and the list of
+discovered Mihomo cores. Handy for support transcripts.
+
+## Configuration Paths
+
+Show the paths Kumo writes to and reads from.
+
+```bash
+kumo config             # alias of `kumo config path`
+kumo config path        # application support directory
+kumo config list        # every CLI-visible path
+kumo c list             # short alias for `kumo config`
+```
+
+## Backup
+
+Export or import a Kumo backup.
+
+```bash
+kumo backup export ~/Documents/kumo-backup
+kumo backup import ~/Documents/kumo-backup
+```
+
+A backup captures `state.json`, the profiles directory, the overrides
+directory, and Sub-Store data. See
+[File paths](/docs/reference/file-paths#backup-format) for the layout.
+
+## Profiles
+
+Refresh a remote profile from its subscription URL.
+
+```bash
+kumo profile refresh "https://example.com/sub.yaml"
+```
+
+`kumo profile refresh` takes a remote subscription URL. The first refresh
+imports the profile; subsequent refreshes update the existing entry. The
+broader profile management surface (`importProfile`, `profileContent`,
+`updateProfile`, `deleteProfile`, refresh-by-id, refresh-all-due) is
+exposed through `KumoController` for the GUI today and is being added to
+the CLI alongside rule and provider management.
+
+## System Proxy
+
+Drive macOS system proxy settings safely.
+
+```bash
+kumo sysproxy on --dry-run --json
+kumo sysproxy on --json
+kumo sysproxy off --json
+```
+
+`--dry-run` returns the exact `networksetup` commands without executing
+them or binding the PAC listener.
+
+## TUN
+
+Toggle Mihomo TUN mode through the Helper (when available).
+
+```bash
+kumo tun enable --json
+kumo tun disable --json
+```
+
+Without a privileged owner of the `utun` device, enable returns a clear
+service-mode error and the stored state rolls back before Mihomo restarts.
+
+## Service Mode
+
+Manage the (planned) Kumo Helper that owns privileged operations.
+
+```bash
+kumo service status --json
+kumo service install
+kumo service uninstall
+```
+
+Install and uninstall use macOS administrator authorization. Until the
+helper ships, these commands report a not-installed state.
+
+## Sub-Store
+
+Manage the bundled Sub-Store backend.
+
+```bash
+kumo substore status --json
+kumo substore prepare              # copy bundled resources into ~/Library/...
+kumo substore start
+kumo substore stop
+kumo substore restart
+```
+
+## Core
+
+Manage the Mihomo binary.
+
+```bash
+kumo core install                  # download a managed core into application support
+```
+
+## Agent Skills
+
+Install the bundled `kumo-cli` Agent Skill into coding-agent skill
+directories.
+
+```bash
+kumo skills status --json
+kumo skills install --agent claude --scope global --dry-run --json
+kumo skills install --agent all
+kumo skills uninstall --agent cursor --scope project --dry-run --json
+```
+
+`--agent` accepts `cursor`, `claude`, `codex`, `gemini`, `agents`, or `all`.
+`codex` and `gemini` do not support project scope. `--agent all --scope project`
+targets only agents with project-scope support.
+
+Install is non-destructive by default. If the destination directory exists
+and was not recorded as installed by Kumo, the command fails until you pass
+`--force`.
+
+## Logs
+
+Inspect runtime and CLI logs.
+
+```bash
+kumo logs                          # runtime logs
+kumo logs runtime --limit 200 --level info --json
+kumo logs cli --limit 5 --json
+kumo logs path
+kumo logs clean --dry-run --json
+```
+
+See [Logging](/docs/cli/logging) for log levels and redaction.
+
+## Completion
+
+Print a shell completion script.
+
+```bash
+kumo completion zsh
+kumo completion bash
+kumo completion fish
+```
+
+See [Completion](/docs/cli/completion) for installation instructions.
+
+## Discovery And Help
+
+```bash
+kumo --help
+kumo --long
+kumo help status
+kumo status --help
+kumo --version
+```
+
+## Global Flags
+
+| Flag                          | What it does                                                                  |
+| ----------------------------- | ----------------------------------------------------------------------------- |
+| `--json`                      | Switch output to the stable JSON envelope.                                    |
+| `--dry-run`                   | Preview changes for commands that write system state.                         |
+| `--loglevel <level>`          | Set terminal log verbosity. Default `notice`.                                 |
+| `--silent` / `--verbose`      | Shorthand for `--loglevel silent` / `--loglevel verbose`.                     |
+| `-d`                          | Shorthand for `--loglevel info`.                                              |
+| `--color <auto/always/never>` | Control ANSI styling. Auto-detects TTY by default.                            |
+| `--logs-dir <path>`           | Override the CLI debug log directory.                                         |
+| `--logs-max <count>`          | Limit retained CLI debug logs. `--logs-max=0` disables debug log files.       |
+| `--timing`                    | Write a process-specific timing JSON file and (text mode) a stderr summary.   |

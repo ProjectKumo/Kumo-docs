@@ -1,0 +1,41 @@
+---
+title: macOS App
+description: A tour of the SwiftUI app, grouped by how often you reach for each screen.
+---
+
+The Kumo app uses a `NavigationSplitView` source-list sidebar grouped into
+three sections by task frequency:
+
+| Section   | Destinations                                                                              | What it answers                                                                |
+| --------- | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| Daily     | [Overview](/docs/app/overview), [Profiles](/docs/app/profiles), [Proxies](/docs/app/proxies) | Connection state, profile management, proxy groups, and node selection.        |
+| Inspect   | [Connections](/docs/app/connections), [Logs](/docs/app/logs), [Rules](/docs/app/rules)    | What the core is doing right now — traffic, log lines, and matched rules.      |
+| Configure | [Core](/docs/app/core), [System Proxy](/docs/app/system-proxy), [TUN](/docs/app/tun), [DNS](/docs/app/dns), [Sub-Store](/docs/app/sub-store), and more | Lower-frequency runtime settings and advanced integrations.                    |
+
+The app also has app-wide chrome you can reach from anywhere:
+
+- [Menu bar status item](/docs/app/menu-bar) — quick connect / disconnect, mode
+  switching, and a custom About window.
+- [Settings](/docs/app/settings) — preferences such as Open at Login, the
+  update channel, and *Run Setup Again*.
+
+## Toolbar
+
+The unified toolbar at the top of the main window owns the four most-used
+controls:
+
+- **Start / Stop** — runs Mihomo with the generated runtime configuration.
+- **Mode picker** — Rule, Global, or Direct (`Cmd + 1 / 2 / 3`).
+- **Refresh** — re-reads core state, profile metadata, and proxy groups.
+- **Search** — attached to Inspect pages.
+
+Start / Stop and the mode picker are intentionally **not** duplicated on the
+Overview pane. They live in the toolbar so they are reachable in one click no
+matter where you are.
+
+## Information Density
+
+Kumo deliberately avoids dense dashboards. Daily destinations stay focused;
+Inspect tables and Configure forms are where you go when something needs
+attention. If a control or piece of information already lives in the toolbar
+or the menu bar status item, the daily pane will not repeat it.

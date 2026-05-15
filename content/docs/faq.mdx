@@ -1,0 +1,103 @@
+---
+title: FAQ
+description: Quick answers to common questions about Kumo, Mihomo, and how the app behaves.
+---
+
+## What Is Kumo, Exactly?
+
+Kumo is a native macOS client for the
+[Mihomo](https://github.com/MetaCubeX/mihomo) proxy core. It includes:
+
+- A SwiftUI app with calm daily controls and discoverable advanced settings.
+- A `kumo` CLI that uses the same `KumoCoreKit` facade as the GUI.
+- A bundled Sub-Store backend, an agent skill installer, and Spotlight /
+  Services / App Intents integration.
+
+It is **not** a VPN service — you bring your own subscription.
+
+## What Macs Does Kumo Run On?
+
+macOS 15 Sequoia or later, on Apple Silicon. See
+[Requirements](/docs/getting-started/requirements).
+
+## Does Kumo Use A VPN Configuration?
+
+No. Kumo controls macOS system proxy through `networksetup` and Mihomo's
+TUN mode through the standard `utun*` device. The "Allow VPN
+Configuration" prompt is **not** expected. See
+[Permissions](/docs/reference/permissions).
+
+## What Happens The First Time I Launch It?
+
+A four-step onboarding sheet runs. You can install the CLI symlink, pick
+which coding-agent skill directories to populate, and either start using
+Kumo or rerun setup from Settings later. See
+[First run](/docs/getting-started/first-run).
+
+## Where Does Kumo Store Data?
+
+Everything Kumo writes lives under
+`~/Library/Application Support/Kumo/`. See
+[File paths](/docs/reference/file-paths) for the full layout.
+
+## How Do I Use Multiple Profiles?
+
+Add them in **Profiles** and switch between them by selecting the active
+one. Only one profile is active at a time. To work around this you can
+use [overrides](/docs/profiles/overrides) to inject context-specific
+rules on top of a shared base profile.
+
+## How Do I Refresh A Subscription From The CLI?
+
+```bash
+kumo profile refresh "https://example.com/sub.yaml"
+```
+
+`kumo profile refresh` takes a remote subscription URL. The first refresh
+imports the profile; subsequent refreshes update the existing entry.
+
+See [CLI commands](/docs/cli/commands#profiles).
+
+## Why Are There Two Sets Of Logs?
+
+- `logs/core.log` is Mihomo's own log file.
+- `logs/cli/*-kumo-debug-*.log` is Kumo's per-invocation CLI debug log.
+
+See [Logs](/docs/app/logs) for the GUI surface and
+[Logging](/docs/cli/logging) for the CLI surface.
+
+## Can I Run Kumo Without The GUI?
+
+Yes — the `kumo` CLI exposes the same functionality through stable
+commands and JSON output. App Intents and the menu bar status item still
+need the running `.app` bundle. See [Command Line](/docs/cli).
+
+## Does Kumo Auto-Update?
+
+Yes. `AppUpdateManager` polls the configured release manifest every five
+minutes and notifies you when an update is available. The download is
+verified by SHA-256 before the detached DMG installer copies the new
+bundle over the existing install. See [Updates](/docs/reference/updates).
+
+## How Do Coding Agents Use Kumo?
+
+Through the bundled `kumo-cli` Agent Skill. The skill teaches agents the
+JSON envelope, the safe set of commands, and the dry-run convention.
+Install it from the onboarding sheet or `kumo skills install`.
+
+See [Agent Skills](/docs/automation/agent-skills).
+
+## Is It Open Source?
+
+Yes — Kumo is licensed under the GNU Affero General Public License v3.0
+only (AGPL-3.0-only). The source is at
+[github.com/ProjectKumo/KumoApp](https://github.com/ProjectKumo/KumoApp).
+
+## How Do I Report A Bug?
+
+Open an issue at
+[github.com/ProjectKumo/KumoApp/issues](https://github.com/ProjectKumo/KumoApp/issues).
+Include the output of
+`kumo --version`, `kumo status --json`, and the last ~50 lines of
+`logs/core.log`. Kumo redacts known secrets, but please review the log
+text before sharing it publicly.

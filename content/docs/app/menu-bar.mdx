@@ -1,0 +1,59 @@
+---
+title: Menu Bar
+description: The persistent status item, the quick menu, and the About window.
+---
+
+Kumo keeps a persistent macOS menu bar status item alive whenever the app is
+running. It is implemented as an AppKit `NSStatusItem` (controlled by
+`KumoStatusItemController`) so the menu content can be rebuilt dynamically
+without the visibility limitations of `MenuBarExtra`.
+
+## What The Status Item Shows
+
+The icon reflects the current state — running, stopped, or in an error
+state. Hovering reveals a tooltip with the active mode and profile name.
+
+## Quick Menu
+
+Click the status item to open a native menu with:
+
+- **Start Kumo** / **Stop Kumo** — same as the toolbar Start/Stop button.
+- **Outbound Mode** — Rule, Global, Direct.
+- **System Proxy** — toggle on / off.
+- **TUN** — toggle on / off (when service mode is available).
+- **Refresh** — re-read state and proxy groups.
+- **Open Main Window** — bring the SwiftUI app to the front.
+- **About Kumo** — opens the custom About window (also reachable from the
+  app menu).
+- **Quit Kumo** — quits the app entirely.
+
+The same actions are available as `App Intents`, so you can trigger them
+from Shortcuts, Siri, and Spotlight. See [Automation](/docs/automation).
+
+## Keyboard Shortcuts
+
+Most of the same actions also have keyboard shortcuts in the main window:
+
+| Action                       | Shortcut                  |
+| ---------------------------- | ------------------------- |
+| Start Kumo                   | `Shift` + `Command` + `S` |
+| Stop Kumo                    | `Command` + `.`           |
+| Rule / Global / Direct mode  | `Command` + `1 / 2 / 3`   |
+| Refresh                      | `Command` + `R`           |
+| Settings                     | `Command` + `,`           |
+| Toggle Sidebar               | `Command` + `Ctrl` + `S`  |
+
+See [Keyboard shortcuts](/docs/reference/keyboard-shortcuts) for the full list.
+
+## Visibility
+
+A `hideMenuBarIcon` preference is persisted, and runtime visibility can be
+wired through the status item controller. The Settings toggle for it is
+hidden in the v1 build while the team reviews the UX; the underlying support
+is in place.
+
+## About Window
+
+`Window("About Kumo", id: "about")` is shared by both the App menu and the
+status item menu. It shows the app icon, version and build, author GitHub
+link, project links, and the same update-check state used by Settings.

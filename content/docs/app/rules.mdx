@@ -1,0 +1,42 @@
+---
+title: Rules
+description: Inspect the rule chain Mihomo is using right now.
+---
+
+The **Rules** destination shows the ordered rule list reported by Mihomo's
+`GET /rules` endpoint. It is read-only in the first version.
+
+## Columns
+
+| Column   | What it shows                                                              |
+| -------- | -------------------------------------------------------------------------- |
+| Order    | Rule position in the active chain.                                         |
+| Type     | Mihomo rule type (e.g. `DOMAIN-SUFFIX`, `IP-CIDR`, `GEOIP`, `MATCH`).      |
+| Payload  | The match payload (a domain, CIDR, or rule provider name).                 |
+| Proxy    | The proxy group or outbound the rule routes to.                            |
+
+## Search
+
+The toolbar search filters by type, payload, or destination. Use it to find
+which rule sends a particular domain to which group, or to locate every
+`DIRECT` rule in a long chain.
+
+## Future Work
+
+Rule enable / disable and rule provider management are tracked under the
+roadmap as part of Sparkle-parity controller coverage. Once they land, the
+Rules destination will expose:
+
+- `PATCH /rules/disable` for runtime rule toggling.
+- `GET /providers/rules` and `PUT /providers/rules/<name>` for refreshing
+  rule providers without restarting the core.
+
+Until then, edit your profile's `rules:` section (or use overrides) and
+refresh the profile to apply the change.
+
+## See Also
+
+- [Profiles → Overrides](/docs/profiles/overrides) — how to add or replace
+  rules from outside the base profile YAML.
+- [System Proxy](/docs/app/system-proxy) — how rules interact with PAC and
+  manual proxy modes.

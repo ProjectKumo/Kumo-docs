@@ -1,0 +1,86 @@
+---
+title: Agent Skills
+description: Install the bundled kumo-cli Agent Skill into coding-agent skill directories.
+---
+
+Coding agents such as Claude Code, Cursor, Codex, Gemini, and the
+agents-spec runtime can load skills that teach them how to use a CLI safely.
+Kumo ships a `kumo-cli` skill that documents the JSON envelope, dry-run
+flags, command names, and the agent contract.
+
+## What The Skill Teaches
+
+The skill explains:
+
+- The stable [JSON envelope](/docs/cli/json-mode) every `--json` command
+  returns, including the `error.code` field.
+- The set of safe commands (status, mode, refresh, etc.) and the set of
+  commands that should default to `--dry-run` (`sysproxy`, `tun`, anything
+  that writes user state).
+- Exit-code semantics — `0` for success, `1` for failure.
+- How to discover available commands with `kumo --help` and
+  `kumo <command> --help`.
+
+The result: agents reach for `kumo --json` predictably instead of guessing
+at output formats or scraping human text.
+
+## Install Targets
+
+The same `KumoCoreKit.AgentSkillsInstaller` powers both the GUI and the
+CLI. Supported targets:
+
+| Agent     | Global scope                                    | Project scope         |
+| --------- | ----------------------------------------------- | --------------------- |
+| `cursor`  | `~/.cursor/skills`                              | `.cursor/skills`      |
+| `claude`  | `~/.claude/skills`                              | `.claude/skills`      |
+| `codex`   | `$CODEX_HOME/skills` or `~/.codex/skills`       | *(not supported)*     |
+| `gemini`  | `~/.gemini/skills`                              | *(not supported)*     |
+| `agents`  | `~/.agents/skills`                              | `.agents/skills`      |
+| `all`     | Every supported target for the selected scope.  | Project-capable only. |
+
+## From The GUI
+
+The first-run onboarding sheet exposes a checkbox per target. To install or
+uninstall later:
+
+- **Settings → General → Run Setup Again** to re-enter the onboarding flow.
+- **AgentSkills** destination under Configure (when shown) to manage installs
+  ad-hoc.
+
+## From The CLI
+
+```bash
+kumo skills status --json
+kumo skills install --agent claude --scope global --dry-run --json
+kumo skills install --agent claude --scope global
+kumo skills uninstall --agent cursor --scope project
+```
+
+Install is **non-destructive by default**: if the destination skill
+directory already exists and was not recorded as installed by Kumo, the
+command fails until you explicitly pass `--force`. This avoids overwriting
+a user-managed skill folder.
+
+## Verify
+
+```bash
+kumo skills status --agent all --json | jq
+```
+
+The response shows install state per target and per scope. Each entry
+includes the resolved destination path so you can confirm where the skill
+landed.
+
+## Uninstall
+
+```bash
+kumo skills uninstall --agent <name> --scope <global|project> --json
+```
+
+Uninstall only removes files Kumo originally installed. If you customized
+the skill files, save your changes elsewhere first.
+
+## Project Scope
+
+`codex` and `gemini` do not support project scope. The combined
+`--agent all --scope project` flag targets only the agents that do.

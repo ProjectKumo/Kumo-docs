@@ -1,0 +1,81 @@
+---
+title: Remote Profiles
+description: Subscriptions, auto-update, subscription user info, and refresh through proxy.
+---
+
+A **remote profile** is a subscription URL Kumo fetches over HTTPS. Refresh
+re-downloads the YAML, parses subscription headers, and updates the metadata.
+
+## Add A Subscription
+
+From the GUI:
+
+1. Open **Profiles → Add → Remote**.
+2. Paste the subscription URL.
+3. Set the display name, auto-update interval, and a `useProxy` toggle
+   (whether refresh requests should go through Kumo).
+
+From the CLI:
+
+```bash
+kumo profile refresh "https://example.com/sub.yaml"
+```
+
+When the URL is not already known, this imports the profile. When it is
+known, this refreshes it in place.
+
+## Subscription User Info
+
+When the response includes a `subscription-userinfo` header, Kumo records:
+
+- `upload` and `download` byte counts.
+- `total` byte cap.
+- `expire` Unix timestamp.
+
+The Overview Profile card and the Profiles detail pane render these as a
+used / total `ProgressView` plus a relative-time expiry. If the server does
+not return the header, these fields are hidden.
+
+## `useProxy`
+
+When `useProxy` is on, Kumo routes the refresh request through the running
+Mihomo core so subscription servers see the proxy IP, not your direct IP.
+This is useful for subscriptions that geofence their URL.
+
+When `useProxy` is off, refresh uses a direct `URLSession`.
+
+If the core is not running, Kumo falls back to direct regardless of
+`useProxy` (and warns in the logs).
+
+## Auto Update
+
+Profiles can carry an auto-update interval. The background scheduler runs
+`refreshDueProfiles` periodically, and the Overview Profile card shows the
+configured interval alongside the relative `updated` time so you can see
+at a glance whether a profile is stale.
+
+## Credentials In URLs
+
+Kumo accepts subscription URLs with embedded credentials
+(`https://user:pass@example.com/sub`). These are stored only in the
+profile metadata, but log redaction masks them before writing terminal or
+file output. Treat backups of the application support directory as
+credentialed material.
+
+## Refresh Errors
+
+Refresh failures show up in two places:
+
+- An in-app banner with the failing URL and the error text.
+- The CLI returns a JSON envelope with `ok: false` and an error code such
+  as `PROFILE_FETCH_FAILED`.
+
+Try `kumo profile refresh <url> --verbose` to capture the failing HTTP
+status. Logs are redacted, so it is safe to share the stderr output.
+
+## See Also
+
+- [Sub-Store profiles](/docs/profiles/sub-store) — when the subscription
+  source is the bundled Sub-Store backend.
+- [Overrides](/docs/profiles/overrides) — fix or augment a subscription
+  without editing its YAML.

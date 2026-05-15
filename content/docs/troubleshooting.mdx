@@ -1,0 +1,134 @@
+---
+title: Troubleshooting
+description: Common problems with the app, the core, profiles, and system proxy — with concrete next steps.
+---
+
+This page covers the issues most likely to bite you on a fresh install.
+For anything not listed here, capture `kumo status --json` and a few lines
+from `~/Library/Application Support/Kumo/logs/core.log` and open an issue.
+
+## Kumo Won't Start The Core
+
+**Symptom:** Pressing Start does nothing, or the status item flips back to
+stopped immediately.
+
+**Likely causes:**
+
+- Kumo can't find a Mihomo binary.
+- The Mihomo binary it found is not executable.
+- The mixed port is already in use.
+
+**Next steps:**
+
+```bash
+kumo status --json | jq '.data.core'
+kumo core install            # install a Kumo-managed core
+kumo start --core /opt/homebrew/bin/mihomo --verbose
+```
+
+Inspect `logs/core.log` for the actual Mihomo error message. If the mixed
+port is taken, change it from **Configure → Core** or terminate the
+conflicting process.
+
+## "System Proxy Failed To Enable"
+
+**Symptom:** The Overview System Proxy toggle bounces back to Off with an
+error.
+
+**Likely causes:**
+
+- The Mihomo mixed port is not accepting TCP connections yet.
+- The selected network service does not match the active route.
+- Another tool (a different proxy app) is fighting Kumo for the same
+  settings.
+
+**Next steps:**
+
+```bash
+kumo sysproxy on --dry-run --json
+```
+
+The dry-run output prints the exact `networksetup` commands Kumo would
+run, including the resolved network service. If the service is wrong,
+override it on **Configure → System Proxy**.
+
+If the port is the issue, make sure the core is actually running. Kumo
+verifies `host:port` is accepting connections before applying changes;
+if it isn't, system proxy refuses to enable.
+
+## TUN Toggle Returns A Service-mode Error
+
+**Symptom:** Enabling TUN returns an error mentioning the Kumo Helper.
+
+**Cause:** TUN needs a privileged owner of the `utun` device. The Kumo
+Helper that owns this is planned but not yet installed.
+
+**Workaround:** Use System Proxy instead until service mode ships. See
+[TUN](/docs/app/tun) for the long-term plan.
+
+## Profile Refresh Fails With HTTP Errors
+
+**Symptom:** Refreshing a remote profile prints an HTTP error.
+
+**Next steps:**
+
+1. Try `kumo profile refresh "<url>" --verbose`.
+2. Check whether the subscription endpoint requires `useProxy=true`.
+   Toggle it from the Profiles detail pane.
+3. If the URL contains credentials, double-check them. The error text
+   shows the HTTP status code returned by the server.
+4. If the subscription only works through Mihomo itself, start the core
+   first and refresh again.
+
+## Connections View Shows No Process Icons
+
+**Symptom:** The Process column has only host names.
+
+**Cause:** Mihomo did not return `metadata.processPath` for the
+connection.
+
+**Next steps:** Kumo sets `find-process-mode: always` in the generated
+runtime config by default. Confirm with:
+
+```bash
+grep find-process-mode ~/Library/Application\ Support/Kumo/work/config.yaml
+```
+
+If your profile overrides this key, remove the override (or use a Kumo
+override to set it to `always`).
+
+## The Menu Bar Icon Is Missing
+
+**Symptom:** No status item appears in the menu bar.
+
+**Likely cause:** Another menu bar manager (Bartender, Hidden Bar) is
+hiding it, or the `hideMenuBarIcon` preference is set.
+
+**Next steps:** Bring the main window to the front from **Window → Open
+Main Window** or restart Kumo. Settings exposes the toggle for menu bar
+visibility (planned in the UI).
+
+## App Update Failed To Install
+
+**Symptom:** Update download finishes but install reports an error.
+
+**Likely cause:** Kumo is installed in a protected location (not
+`/Applications`) and the update flow cannot replace the bundle.
+
+**Next steps:** Move `Kumo.app` to `/Applications` and re-run the update,
+or install the DMG manually from the linked download page in
+**Settings → Updates**.
+
+## Still Stuck
+
+Open an issue at
+[github.com/ProjectKumo/KumoApp/issues](https://github.com/ProjectKumo/KumoApp/issues)
+with:
+
+- `kumo --version`.
+- The output of `kumo status --json`.
+- The last ~50 lines of `~/Library/Application Support/Kumo/logs/core.log`.
+- Any error notifications you saw.
+
+Kumo redacts secrets in CLI output, but please double-check the logs
+before pasting them publicly. See [Logging](/docs/cli/logging#redaction).

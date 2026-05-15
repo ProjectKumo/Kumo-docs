@@ -1,0 +1,69 @@
+---
+title: Logs
+description: Recent Mihomo log lines, with filtering and a path to the file on disk.
+---
+
+The **Logs** destination shows recent log lines from the running Mihomo core.
+It is intended for quick triage; for a full transcript, open the file on
+disk.
+
+## Where Logs Live
+
+| Path                                                | What it contains                            |
+| --------------------------------------------------- | ------------------------------------------- |
+| `~/Library/Application Support/Kumo/logs/core.log`  | Mihomo stdout and stderr.                   |
+| `~/Library/Application Support/Kumo/logs/cli/`      | Per-invocation `kumo` CLI debug logs.       |
+| `~/Library/Application Support/Kumo/logs/substore.log` | Sub-Store backend stdout and stderr.     |
+| `~/Library/Application Support/Kumo/logs/app-update-installer.log` | Detached DMG installer log. |
+
+`KumoPaths` centralizes these paths so the GUI, CLI, tests, and future service
+mode all use the same layout.
+
+## In-App Filtering
+
+The Logs destination shows the most recent N lines from `core.log`. The
+toolbar search field filters by substring; level filters reduce the view to a
+single log level. The search field follows the same convention as
+Connections — it stays visible even when the filter returns zero matches, so
+you can adjust the query without losing the toolbar control.
+
+## Live Log Streaming
+
+The first version of Kumo treats live logs as a bounded in-memory cache
+fed by the Mihomo controller. A future Sparkle-parity pass will add a true
+WebSocket-backed event stream with restart policies and structured filters.
+The on-disk `core.log` remains a fallback.
+
+## From The CLI
+
+The CLI exposes two distinct log surfaces:
+
+```bash
+# Recent Mihomo / runtime log lines.
+kumo logs runtime --limit 200 --level info --json
+
+# Recent kumo CLI debug log summaries.
+kumo logs cli --limit 20 --json
+
+# Print the logs directory.
+kumo logs path
+
+# Clean old CLI debug and timing logs.
+kumo logs clean --dry-run --json
+```
+
+Use `kumo --logs-dir <path>` to redirect CLI debug logs to a custom location
+for temporary diagnostics, and `kumo --logs-max <count>` to control retention.
+`--logs-max=0` disables CLI debug log files for sensitive environments.
+
+## Redaction
+
+Both terminal and file logs run through a small redactor before being
+written. The redactor masks profile URL tokens, controller secrets,
+authorization headers, basic auth passwords, and similar credentials.
+
+<Callout type="warn" title="Treat redaction as a safety net">
+  Redaction is best-effort. Before pasting logs into a public issue, review
+  them for hostnames, IP addresses, and tokens that the redactor may not have
+  caught.
+</Callout>

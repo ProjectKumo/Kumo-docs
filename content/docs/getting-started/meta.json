@@ -1,0 +1,10 @@
+{
+  "title": "Getting Started",
+  "pages": [
+    "index",
+    "requirements",
+    "install",
+    "first-run",
+    "command-line-tool"
+  ]
+}

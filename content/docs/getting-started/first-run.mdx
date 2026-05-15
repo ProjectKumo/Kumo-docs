@@ -1,0 +1,70 @@
+---
+title: First Run
+description: The four-step onboarding sheet that appears the first time you open Kumo.
+---
+
+When Kumo launches for the first time it presents a sheet on top of the main
+window. The sheet is the documented entry point for installing the CLI and
+the bundled agent skill; you can revisit it at any time from **Settings →
+General → Run Setup Again**.
+
+## Step 1 — Welcome
+
+A short summary of what Kumo does. You can press **Skip** to dismiss the entire
+sheet, or **Continue** to proceed.
+
+## Step 2 — Command Line Tool
+
+Kumo offers to install (or remove) a `/usr/local/bin/kumo` symlink that points
+at the CLI bundled inside `Kumo.app/Contents/Helpers/kumo`. macOS shows an
+administrator authorization prompt because `/usr/local/bin` requires elevated
+privileges to write.
+
+After installation you can run `kumo` from any terminal:
+
+```bash
+kumo --version
+kumo status --json
+```
+
+If the symlink already exists and points at a different `kumo`, Kumo reports
+that state so you can decide whether to repoint it. Reinstalling Kumo can be
+rerun safely from this step.
+
+See [Command-line tool](/docs/getting-started/command-line-tool) for ongoing
+management.
+
+## Step 3 — Agent Skill
+
+Kumo ships a bundled `kumo-cli` Agent Skill that teaches coding agents how to
+call the CLI safely (JSON output, dry-run flags, and named commands). The step
+lists every supported target with a checkbox:
+
+- `cursor` — `~/.cursor/skills` (global) and `.cursor/skills` (project).
+- `claude` — `~/.claude/skills` (global) and `.claude/skills` (project).
+- `codex` — `$CODEX_HOME/skills` or `~/.codex/skills` (global only).
+- `gemini` — `~/.gemini/skills` (global only).
+- `agents` — `~/.agents/skills` (global) and `.agents/skills` (project).
+
+All checkboxes are off by default. The same install flow is available from the
+CLI:
+
+```bash
+kumo skills status --json
+kumo skills install --agent claude --scope global --dry-run --json
+```
+
+Install is non-destructive — if a destination directory already exists and was
+not recorded as installed by Kumo, the command fails until you pass `--force`.
+
+## Step 4 — Done
+
+A summary of what was installed. Selecting **Finish** persists
+`hasCompletedOnboarding = true` so the sheet does not appear again.
+
+## Rerunning Setup
+
+You can rerun the entire flow without resetting preferences:
+
+- **Settings → General → Run Setup Again**, or
+- `kumo skills install` from the CLI to add an agent later.

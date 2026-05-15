@@ -1,0 +1,4 @@
+{
+  "title": "Profiles",
+  "pages": ["index", "local", "remote", "sub-store", "overrides"]
+}

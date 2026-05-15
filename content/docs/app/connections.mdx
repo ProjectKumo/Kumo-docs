@@ -1,0 +1,54 @@
+---
+title: Connections
+description: The live Connections table, with native app icons resolved from the originating process.
+---
+
+The **Connections** destination is a sortable `Table` of live Mihomo
+connections, read from `GET /connections`.
+
+## Columns
+
+| Column     | What it shows                                                                                     |
+| ---------- | ------------------------------------------------------------------------------------------------- |
+| Process    | The originating macOS app or daemon. Kumo resolves the icon from `metadata.processPath`.          |
+| Host       | Destination host as reported by Mihomo.                                                           |
+| Network    | TCP or UDP.                                                                                       |
+| Chain      | Mihomo proxy chain that handled the connection.                                                   |
+| Rule       | Rule that matched the connection (visible as a small label).                                      |
+| Up / Down  | Cumulative upload and download for the connection so far.                                         |
+| Source     | Local address (IP and port).                                                                      |
+
+Process icons resolve through `NSWorkspace` from the enclosing `.app` or
+`.xpc` bundle and are cached at the SwiftUI view layer. Kumo sets
+`find-process-mode: always` in the generated runtime config so Mihomo always
+returns `processPath`. The shared `ConnectionEntry` model carries the process
+path so the CLI and tests can use it without depending on AppKit.
+
+## Search
+
+The toolbar search field is attached to the page container, not just to a
+populated `Table`. A no-match state intentionally keeps the search field
+visible so you can clear or edit the query without leaving the page.
+
+## Refresh
+
+Connection data refreshes on a short polling interval while the page is in
+front. Use **Refresh** in the toolbar (`Cmd + R`) to force an immediate pull.
+
+## CLI
+
+The same payload is available from the CLI:
+
+```bash
+kumo status --json | jq '.data.connections'
+```
+
+A dedicated `kumo connections --json` is on the roadmap. See the
+[CLI reference](/docs/cli/commands) for the current command set.
+
+## Privacy Note
+
+Connection data can include hostnames, process paths, and network metadata.
+Before pasting connection snapshots into a bug report, review what is in the
+list — Kumo redacts secrets on a best-effort basis in logs, but the
+Connections view is intentionally raw.

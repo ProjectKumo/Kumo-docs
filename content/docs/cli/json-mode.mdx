@@ -1,0 +1,122 @@
+---
+title: JSON Mode
+description: The stable envelope every --json command returns, and how to consume it from agents and scripts.
+---
+
+When you pass `--json`, `kumo` writes a stable JSON envelope to **stdout**.
+Everything else — progress text, warnings, debug logs — is written to
+**stderr** and is safe to discard from automation pipelines.
+
+## Envelope
+
+```json
+{
+  "ok": true,
+  "data": {},
+  "error": null
+}
+```
+
+| Field   | Meaning                                                                                             |
+| ------- | --------------------------------------------------------------------------------------------------- |
+| `ok`    | `true` on success, `false` on failure. Always set.                                                  |
+| `data`  | Command-specific payload. Shape depends on the command (status, proxies, etc.).                     |
+| `error` | `null` on success. On failure, a `{ code, message, details? }` object describing what went wrong.   |
+
+Exit code `0` mirrors `ok: true`. Exit code `1` mirrors `ok: false`.
+
+## Example — Status
+
+```bash
+kumo status --json | jq
+```
+
+```json
+{
+  "ok": true,
+  "data": {
+    "core": { "state": "running", "pid": 12345 },
+    "mode": "rule",
+    "profile": { "id": "default", "name": "default" },
+    "controller": { "host": "127.0.0.1", "port": 9090 },
+    "mixedPort": 7890,
+    "systemProxy": {
+      "enabled": true,
+      "mode": "manual",
+      "service": "Wi-Fi"
+    },
+    "tun": {
+      "enabled": false
+    }
+  },
+  "error": null
+}
+```
+
+The exact shape mirrors `CoreStatus` from `KumoCoreKit`. Optional fields may
+be absent depending on whether the core is running.
+
+## Example — Dry Run
+
+```bash
+kumo sysproxy on --dry-run --json
+```
+
+```json
+{
+  "ok": true,
+  "data": {
+    "service": "Wi-Fi",
+    "commands": [
+      ["networksetup", "-setwebproxy", "Wi-Fi", "127.0.0.1", "7890"],
+      ["networksetup", "-setsecurewebproxy", "Wi-Fi", "127.0.0.1", "7890"],
+      ["networksetup", "-setsocksfirewallproxy", "Wi-Fi", "127.0.0.1", "7890"]
+    ],
+    "mode": "manual",
+    "applied": false
+  },
+  "error": null
+}
+```
+
+## Strictly Plain Output
+
+`--json` keeps stdout as **plain JSON only**. It must not include:
+
+- ANSI escape codes.
+- Progress text or spinners.
+- Warnings or diagnostic logs.
+
+Human-readable diagnostics are still emitted in text mode (to stderr). This
+makes piping into `jq`, `python -mjson.tool`, or another consumer safe.
+
+## Error Shape
+
+```json
+{
+  "ok": false,
+  "data": null,
+  "error": {
+    "code": "CORE_NOT_RUNNING",
+    "message": "Mihomo is not running. Start the core first.",
+    "details": null
+  }
+}
+```
+
+`code` is a stable identifier suitable for branching in scripts; `message`
+is human-readable.
+
+## Agent Contract
+
+Coding agents that consume the CLI should:
+
+1. Always pass `--json` for commands that have it.
+2. Branch on the `error.code` field for retry / next-step logic.
+3. Prefer `--dry-run` before applying system changes the user did not
+   explicitly request.
+4. Treat exit code `1` as a soft failure — the JSON envelope is still
+   present on stdout for diagnostics.
+
+The bundled `kumo-cli` Agent Skill teaches this contract directly. See
+[Agent Skills](/docs/automation/agent-skills).
