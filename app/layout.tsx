@@ -7,15 +7,37 @@ const inter = Inter({
   subsets: ['latin'],
 });
 
+const siteTitle = 'Kumo — a calm proxy app for Mac';
+const siteDescription =
+  'Kumo is a native macOS proxy client built on Mihomo. Learn how to install, configure, and extend Kumo.';
+const bannerImage = {
+  url: '/kumo-banner.png',
+  width: 2560,
+  height: 1280,
+  alt: 'Kumo — a calm proxy app for Mac',
+};
+
 export const metadata: Metadata = {
   metadataBase: new URL('https://kumo-docs.pages.dev'),
   title: {
-    default: 'Kumo — a calm proxy app for Mac',
+    default: siteTitle,
     template: '%s · Kumo Docs',
   },
-  description:
-    'Kumo is a native macOS proxy client built on Mihomo. Learn how to install, configure, and extend Kumo.',
+  description: siteDescription,
   applicationName: 'Kumo Docs',
+  openGraph: {
+    title: siteTitle,
+    description: siteDescription,
+    siteName: 'Kumo Docs',
+    type: 'website',
+    images: [bannerImage],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: siteTitle,
+    description: siteDescription,
+    images: [bannerImage],
+  },
 };
 
 export default function Layout({ children }: LayoutProps<'/'>) {
