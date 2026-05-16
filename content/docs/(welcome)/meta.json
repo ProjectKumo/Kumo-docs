@@ -1,9 +1,0 @@
-{
-  "title": "Welcome",
-  "description": "Start here — pick the track that fits today.",
-  "icon": "BookOpen",
-  "root": true,
-  "pages": [
-    "index"
-  ]
-}

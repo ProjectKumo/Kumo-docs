@@ -12,6 +12,18 @@ const config = {
   turbopack: {
     root: projectRoot,
   },
+  async redirects() {
+    return [
+      // Welcome was previously its own tab in a `(welcome)/` folder group.
+      // After the merge, /docs lands on the For Everyone track which now
+      // owns the combined intro + "first hour" + quick-links content.
+      {
+        source: '/docs',
+        destination: '/docs/for-everyone',
+        permanent: false,
+      },
+    ];
+  },
 };
 
 export default withMDX(config);

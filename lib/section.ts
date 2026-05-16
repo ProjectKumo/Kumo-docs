@@ -5,15 +5,14 @@
  * The returned key is matched against the CSS custom property
  * `--<section>-color` defined in `app/global.css`.
  *
- * The Welcome tab lives in a `(welcome)` folder group; Fumadocs strips the
- * parens from the URL but keeps them in the node path. Anything that does
- * not start with a known track directory is treated as the welcome page
- * (which has no dedicated colour and falls back to the default foreground).
+ * `for-everyone` is the docs root tab (visiting /docs now redirects there),
+ * so any path that does not start with a known track directory falls back
+ * to `for-everyone` rather than a dedicated welcome key.
  */
 export function getSection(path: string | undefined): string {
-  if (!path) return 'welcome';
+  if (!path) return 'for-everyone';
   const [dir] = path.split('/', 1);
-  if (!dir) return 'welcome';
+  if (!dir) return 'for-everyone';
   return (
     {
       'for-everyone': 'for-everyone',
@@ -21,6 +20,6 @@ export function getSection(path: string | undefined): string {
       contributing: 'contributing',
       internals: 'internals',
       roadmap: 'roadmap',
-    }[dir] ?? 'welcome'
+    }[dir] ?? 'for-everyone'
   );
 }
