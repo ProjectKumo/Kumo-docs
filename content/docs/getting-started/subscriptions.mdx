@@ -6,28 +6,25 @@ description: Paste a subscription URL, let Kumo download it, and make your first
 import { Callout } from 'fumadocs-ui/components/callout';
 import { Step, Steps } from 'fumadocs-ui/components/steps';
 
-A **subscription** is a URL that points at a list of proxy nodes,
-hosted by whoever provides your proxy service. Most providers give it
-to you on their dashboard, often labelled "Clash subscription" or
-"Clash URL".
+A **subscription** is a URL that points to a list of proxy nodes,
+hosted by a proxy service provider. Most providers list it on their
+dashboard, often labelled "Clash subscription" or "Clash URL".
 
-Kumo speaks the Clash / Mihomo subscription format. If your provider
-gives you a Clash subscription, you can paste it straight in.
+Kumo speaks the Clash / Mihomo subscription format. If the provider
+offers a Clash subscription, paste it directly into Kumo.
 
 ## First launch
 
-The first time you open Kumo a small onboarding sheet appears with four
-steps:
+The first time Kumo opens, an onboarding sheet appears with four steps:
 
-1. **Welcome** — a quick "hi, this is Kumo".
-2. **Command-line tool** — optional; covered in [Power
-   User](/docs/advanced/command-line).
-3. **Agent skills** — optional; covered in [Power
-   User](/docs/advanced/agent-skills).
-4. **Done** — you are dropped into the main window.
+1. **Welcome** — an introduction to Kumo.
+2. **Command-line tool** — optional; covered in [Advanced
+   → Command line](/docs/advanced/command-line).
+3. **Agent skills** — optional; covered in [Advanced
+   → Agent skills](/docs/advanced/agent-skills).
+4. **Done** — the main window opens.
 
-You can skip the optional steps now and turn them on later from
-**Settings**.
+The optional steps can be skipped and enabled later from **Settings**.
 
 ## Add your first subscription
 
@@ -46,9 +43,8 @@ a local file.
 
 <Step>
 ### Paste your subscription URL
-Paste the URL from your provider into the **URL** field. Give the
-profile a name you will recognize — for example "Main" or "Provider
-name".
+Paste the URL from the provider into the **URL** field. Give the
+profile a recognizable name — for example "Main" or the provider name.
 </Step>
 
 <Step>
@@ -65,38 +61,36 @@ click it once and use the **Use This Profile** button.
 
 </Steps>
 
-You now have a profile, but Kumo is not running yet. Time to start it.
+The profile is now saved, but Kumo is not running yet.
 
 ## Start Kumo
 
-Switch to the **Overview** destination (top of the sidebar). The big
-status card on the left shows **Stopped**. Click **Start**.
+Switch to the **Overview** destination (top of the sidebar). The status
+card on the left shows **Stopped**. Click **Start**.
 
-Within a second or two it flips to **Running**. The four cards on the
-right come alive:
+Within a second or two the status flips to **Running**. The four cards on
+the right update:
 
-- **Profile** — shows the active profile and traffic counters.
-- **Traffic** — a small live chart of upload and download.
+- **Profile** — the active profile and traffic counters.
+- **Traffic** — a live chart of upload and download.
 - **System Proxy** — toggles whether macOS sends traffic through Kumo.
 - **TUN** — for full-system routing (see [Advanced](/docs/advanced)).
 
-## Send your Mac's traffic through Kumo
+## Send traffic through Kumo
 
-Starting Kumo on its own only makes the proxy *available* on
-`127.0.0.1`. To actually route your everyday browsing through it, flip
-**System Proxy** to **On** on the Overview screen.
+Starting Kumo makes the proxy available on `127.0.0.1`. To route
+browsing traffic through it, flip **System Proxy** to **On** on the
+Overview screen.
 
 <Callout type="info">
 System Proxy uses the same `networksetup` switch that macOS exposes in
 **System Settings → Network**. It does **not** install a VPN
-configuration. You can turn it off at any time and macOS reverts
-immediately.
+configuration. Turning it off reverts macOS immediately.
 </Callout>
 
-Open Safari, visit
-[ipinfo.io](https://ipinfo.io) or
-[whatismyip.com](https://whatismyip.com), and you should see the
-location of the node you picked.
+Open a browser and visit [ipinfo.io](https://ipinfo.io) or
+[whatismyip.com](https://whatismyip.com). The location shown should
+match the selected node.
 
 ## What's next
 

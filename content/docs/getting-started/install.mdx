@@ -6,12 +6,10 @@ description: Download Kumo, drag it into Applications, and open it for the first
 import { Callout } from 'fumadocs-ui/components/callout';
 import { Step, Steps } from 'fumadocs-ui/components/steps';
 
-Kumo ships as a notarized **`.dmg`** disk image. Installing it is the
-same shape as installing any other Mac app.
+Kumo ships as a notarized `.dmg` disk image. The installation process
+is the same as any other Mac app.
 
-## Before you start
-
-You need:
+## Requirements
 
 - macOS 15 Sequoia or newer
 - An Apple Silicon Mac (M1, M2, M3, M4)
@@ -50,31 +48,29 @@ open Kumo from **Applications** or from Launchpad.
 
 </Steps>
 
-The first time you open Kumo, macOS Gatekeeper may say *"Kumo can't be
-opened because it was downloaded from the internet."* Click **Open**.
-You should only see this prompt once.
+The first time you open Kumo, macOS Gatekeeper may display a warning:
+*"Kumo can't be opened because it was downloaded from the internet."*
+Click **Open**. This prompt should only appear once.
 
-## Where Kumo lives on disk
+## File locations
 
-After installing, Kumo lives in **`/Applications/Kumo.app`** like any
-other Mac app. The app's own data — your subscriptions, settings,
-logs — lives separately under your home folder, where you do not have to
-think about it.
+After installing, Kumo resides in `/Applications/Kumo.app`. App data —
+subscriptions, settings, and logs — is stored separately under the home
+folder.
 
 <Callout type="info">
-If you ever want to remove Kumo, drag `Kumo.app` to the Trash. To also
-delete the saved data, open Finder, hit `⇧⌘G`, paste
-`~/Library/Application Support/Kumo` and trash that folder too.
+To remove Kumo, drag `Kumo.app` to the Trash. To also delete saved data,
+open Finder, press `⇧⌘G`, paste `~/Library/Application Support/Kumo`,
+and move that folder to the Trash as well.
 </Callout>
 
 ## Updates
 
-Kumo checks for updates automatically every few minutes while it is
-running, and shows a notification when a new version is ready. You can
-also check manually from **Settings → Updates**. See
+Kumo checks for updates automatically every few minutes while running,
+and shows a notification when a new version is available. Manual checks
+are available from **Settings → Updates**. See
 [Stay up to date](/docs/getting-started/updates).
 
 ## What's next
 
-You have an empty Kumo. Time to add a subscription:
-[Add your subscription](/docs/getting-started/subscriptions).
+Add a subscription: [Subscriptions](/docs/getting-started/subscriptions).
