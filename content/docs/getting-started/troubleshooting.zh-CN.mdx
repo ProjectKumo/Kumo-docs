@@ -5,14 +5,14 @@ description: 全新安装时常见的问题,以及通常奏效的解决方法。
 
 import { Callout } from 'fumadocs-ui/components/callout';
 
-这一页覆盖了大家第一次用 Kumo 时最常碰到的问题。
-如果你的问题不在这,可以看
+这一页覆盖了第一次用 Kumo 时最常碰到的问题。
+如果问题不在这,可以看
 [FAQ](/docs/getting-started/faq),或者在 GitHub 上
 [提一个 issue](https://github.com/ProjectKumo/KumoApp/issues)。
 
-## "Kumo 启动不了" —— 按启动没反应
+## Kumo 启动不了
 
-你在概览里按 **启动**,状态过一会儿又跳回**已停止**。
+按 **启动** 后,状态过一会儿又跳回**已停止**。
 
 常见原因:
 
@@ -21,12 +21,12 @@ import { Callout } from 'fumadocs-ui/components/callout';
 - mixed 端口(Kumo 代理用的本地端口)被别的 app 占了。退掉那个 app,
   或者在 **设置 → 核心** 里改一下端口。
 
-如果两个都没用,侧边栏的 **日志** 里能看到 Mihomo 在说什么。
+如果两个都没用,侧边栏的 **日志** 里能看到 Mihomo 的输出。
 第一条红色的输出通常就是真正的原因。
 
-## "系统代理一直自动跳回关闭"
+## 系统代理一直自动跳回关闭
 
-你打开 **系统代理**,它带着一条错误信息又跳回了关闭。
+打开 **系统代理**,它带着一条错误信息又跳回了关闭。
 
 两个主要原因:
 
@@ -37,7 +37,7 @@ import { Callout } from 'fumadocs-ui/components/callout';
    在 Kumo 里打开 **设置 → 系统代理**,从下拉菜单里选对服务
    (笔记本上通常是 **Wi-Fi**)。
 
-## "TUN 打不开"
+## TUN 打不开
 
 切换 **TUN** 时报错,提示需要 "service mode"。
 
@@ -46,7 +46,7 @@ import { Callout } from 'fumadocs-ui/components/callout';
 自动安装这个组件。在 helper 上线之前,请用 **系统代理** 代替 ——
 对大多数场景来说差别不大,系统代理今天就能正常工作。
 
-## "订阅刷新不了"
+## 订阅刷新不了
 
 打开 **配置** 屏幕里的那份配置,点 **刷新**,留意错误提示。
 
@@ -55,11 +55,11 @@ import { Callout } from 'fumadocs-ui/components/callout';
   还有效。
 - 红色提示提到解析失败:服务器返回的不是一份 Clash 订阅。把 URL
   在浏览器里打开看看真正返回的是什么 —— 有的服务商在订阅过期时
-  会返回一个友好的登录页。
+  会返回一个登录页。
 - 红色提示是超时,且你的服务商只能通过代理本身访问:打开配置详情
   面板,把 **通过 Kumo 刷新** 打开。
 
-## "连接里看不到 app 图标"
+## 连接里看不到 app 图标
 
 如果 **连接** 屏幕里只显示主机名、看不到 app 图标,确认你的配置
 没有把 `find-process-mode` 关掉。Kumo 默认会开它,但有些用户提供
@@ -67,16 +67,16 @@ import { Callout } from 'fumadocs-ui/components/callout';
 [进阶的 overrides 指南](/docs/advanced/overrides) 里讲了
 怎么把它打回去。
 
-## "菜单栏图标不见了"
+## 菜单栏图标不见了
 
-如果 Kumo 图标从你的菜单栏里消失了:
+如果 Kumo 图标从菜单栏里消失了:
 
 - 可能 Bartender、Hidden Bar 或别的菜单栏管理工具把它藏到了溢出区。
-  到它们的溢出列表里翻一翻。
+  到它们的溢出列表里查看。
 - 检查 **设置 → 通用 → 显示菜单栏图标** 是开着的。
-- 实在不行,重启 Kumo。
+- 如仍无效,重启 Kumo。
 
-## "自动更新失败"
+## 自动更新失败
 
 最常见的原因是 Kumo 没装在 `/Applications`。详见
 [保持更新](/docs/getting-started/updates#自动更新失败怎么办)。
@@ -87,9 +87,9 @@ import { Callout } from 'fumadocs-ui/components/callout';
 [github.com/ProjectKumo/KumoApp/issues](https://github.com/ProjectKumo/KumoApp/issues)
 开一个 issue,附上:
 
-- 你的 Kumo 版本(设置 → 关于)。
+- Kumo 版本(设置 → 关于)。
 - macOS 版本和芯片(`关于本机`)。
-- 你做了什么的简短描述。
+- 所做操作的简短描述。
 - 如果 Kumo 行为异常,**日志** 屏幕的最后约 50 行内容。
 
 <Callout type="info">
