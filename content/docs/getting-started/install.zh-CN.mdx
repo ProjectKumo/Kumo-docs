@@ -1,0 +1,78 @@
+---
+title: 安装
+description: 下载 Kumo,把它拖进「应用程序」,然后第一次打开它。
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Step, Steps } from 'fumadocs-ui/components/steps';
+
+Kumo 以一个已签名公证的 **`.dmg`** 磁盘镜像形式发布。安装过程跟其他
+Mac 应用没什么两样。
+
+## 开始之前
+
+你需要:
+
+- macOS 15 Sequoia 或更新版本
+- Apple Silicon Mac (M1, M2, M3, M4)
+- 大约 200 MB 可用磁盘空间
+
+首个版本暂不支持 Intel Mac。
+
+## 安装步骤
+
+<Steps>
+
+<Step>
+### 下载最新版本
+打开
+[GitHub release 页面](https://github.com/ProjectKumo/KumoApp/releases/latest)
+并下载文件名以 `-arm64.dmg` 结尾的那个。
+</Step>
+
+<Step>
+### 打开 DMG
+双击下载好的文件。macOS 会验证签名,然后弹出一个包含 Kumo 图标和
+「应用程序」别名的窗口。
+</Step>
+
+<Step>
+### 把 Kumo 拖到「应用程序」
+在同一窗口里,把 **Kumo** 图标拖到 **应用程序** 别名上。macOS 会复制
+应用。
+</Step>
+
+<Step>
+### 推出 DMG 并启动
+在访达里右键点击挂载的磁盘镜像并选择 **推出**,然后从
+**应用程序** 或启动台里打开 Kumo。
+</Step>
+
+</Steps>
+
+第一次打开 Kumo 时,macOS Gatekeeper 可能会提示
+*"无法打开 Kumo,因为它是从互联网下载的"*。点击 **打开**。这个提示
+通常只会出现一次。
+
+## Kumo 在磁盘上的位置
+
+安装完成后,Kumo 像其他 Mac 应用一样住在 **`/Applications/Kumo.app`**。
+应用自己的数据 —— 你的订阅、设置、日志 —— 则单独存放在你的主目录下,
+你不用操心它们的位置。
+
+<Callout type="info">
+如果你以后想删除 Kumo,把 `Kumo.app` 拖到废纸篓即可。如果同时要清掉
+保存的数据,在访达里按 `⇧⌘G`,粘贴
+`~/Library/Application Support/Kumo`,然后把这个目录也丢进废纸篓。
+</Callout>
+
+## 更新
+
+Kumo 在运行时会每隔几分钟自动检查更新,有新版本时会弹出通知。你也
+可以在 **设置 → 更新** 里手动检查。详见
+[保持更新](/docs/getting-started/updates)。
+
+## 接下来呢
+
+现在你有一个空的 Kumo,该添加一份订阅了:
+[添加你的订阅](/docs/getting-started/subscriptions)。

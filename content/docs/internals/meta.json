@@ -1,6 +1,6 @@
 {
   "title": "Internals",
-  "description": "Source-of-truth technical reference for engineers and integrators — the same docs that ship with the KumoApp source tree.",
+  "description": "Technical reference for engineers and integrators.",
   "icon": "Cpu",
   "root": true,
   "pages": [

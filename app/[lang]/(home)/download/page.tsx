@@ -48,7 +48,7 @@ export default async function DownloadPage({
           <p>
             Need installation help?{' '}
             <Link
-              href={`/${lang}/docs/for-everyone/install`}
+              href={`/${lang}/docs/getting-started/install`}
               className="text-fd-primary hover:underline"
             >
               Read the install guide
@@ -56,10 +56,10 @@ export default async function DownloadPage({
             .
           </p>
           <p>
-            Prefer the command line? Power users can install via Homebrew or
+            Prefer the command line? Advanced users can install via Homebrew or
             build from source — see{' '}
             <Link
-              href={`/${lang}/docs/power-user/command-line`}
+              href={`/${lang}/docs/advanced/command-line`}
               className="text-fd-primary hover:underline"
             >
               Command line

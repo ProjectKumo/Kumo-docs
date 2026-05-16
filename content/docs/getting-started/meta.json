@@ -1,0 +1,17 @@
+{
+  "title": "Getting Started",
+  "description": "Get Kumo installed and connected to your subscription.",
+  "icon": "Sparkles",
+  "root": true,
+  "pages": [
+    "index",
+    "install",
+    "subscriptions",
+    "daily-use",
+    "outbound-modes",
+    "sub-store",
+    "updates",
+    "troubleshooting",
+    "faq"
+  ]
+}

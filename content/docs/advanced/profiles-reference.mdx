@@ -1,5 +1,5 @@
 ---
-title: Profiles Deep Dive
+title: Profiles reference
 description: Local YAML, remote subscriptions, refresh policy, useProxy, and the merge order.
 ---
 
@@ -71,7 +71,7 @@ fetch needs Kumo to already be running.
 When you make a profile active, Kumo does:
 
 1. Reads the profile YAML.
-2. Applies enabled [overrides](/docs/power-user/overrides) in order.
+2. Applies enabled [overrides](/docs/advanced/overrides) in order.
 3. Applies Kumo-controlled settings (mixed port, controller endpoint,
    `find-process-mode: always`, DNS block when TUN is on, etc.).
 4. Writes the merged result to `work/config.yaml`.
@@ -102,7 +102,7 @@ and is being added to the CLI surface.
 ## Things that bite people
 
 - **Editing `work/config.yaml` directly.** Pointless — it is
-  regenerated on every start. Use [overrides](/docs/power-user/overrides)
+  regenerated on every start. Use [overrides](/docs/advanced/overrides)
   instead.
 - **Two profiles fighting over the same group name.** Kumo only
   activates one profile at a time, but if you switch profiles, the
@@ -114,5 +114,5 @@ and is being added to the CLI surface.
 
 <Callout type="info">
 Backups capture profiles too. See
-[backup](/docs/power-user/cli-reference#backup) in the CLI reference.
+[backup](/docs/advanced/cli-reference#backup) in the CLI reference.
 </Callout>

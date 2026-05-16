@@ -1,5 +1,5 @@
 ---
-title: Writing or Fixing Docs
+title: Documentation
 description: These docs live in a separate repo. Edits ship via PR like any other code change.
 ---
 
@@ -34,8 +34,8 @@ Kumo-docs/
     docs/
       index.mdx            Landing page
       meta.json            Top-level navigation order
-      for-everyone/        Plain-language user docs
-      power-user/          Power-user docs
+      getting-started/     Plain-language user docs
+      advanced/            Advanced track docs
       contributing/        These pages
   app/                     Next.js App Router shell
   components/              Shared React components
@@ -66,15 +66,15 @@ The nav order inside a folder comes from a sibling `meta.json`:
 
 ```json
 {
-  "title": "For Everyone",
+  "title": "Getting Started",
   "description": "...",
   "pages": [
     "index",
     "install",
-    "first-connection",
+    "subscriptions",
     "---Day to day---",
-    "everyday",
-    "switching-modes"
+    "daily-use",
+    "outbound-modes"
   ]
 }
 ```
@@ -125,8 +125,8 @@ We write three different voices in three different places:
 
 | Track | Voice | What to avoid |
 | --- | --- | --- |
-| **For Everyone** | Friendly, concrete, no jargon. Talks about windows, buttons, and menus. | JSON, file paths, Swift type names, networking terms beyond "proxy". |
-| **Power User** | Direct, technical, assumes a terminal. Names concepts and components. | Marketing copy, hedging, "easily", "simply". |
+| **Getting Started** | Friendly, concrete, no jargon. Talks about windows, buttons, and menus. | JSON, file paths, Swift type names, networking terms beyond "proxy". |
+| **Advanced** | Direct, technical, assumes a terminal. Names concepts and components. | Marketing copy, hedging, "easily", "simply". |
 | **Contributing** | Practical, peer-to-peer. Assumes you can read Swift. | Repeating onboarding content; jumping straight to internals. |
 
 Across all three:
