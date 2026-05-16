@@ -1,63 +1,57 @@
 ---
 title: Introduction
-description: Kumo is a calm, native proxy app for Mac. Start here — what it does, what you will need, and how to get going.
+description: Kumo is a native macOS proxy client. Overview, requirements, and first steps.
 ---
 
 import { Cards, Card } from 'fumadocs-ui/components/card';
 import { Callout } from 'fumadocs-ui/components/callout';
 
 Kumo is a native macOS app that routes traffic through the
-[Mihomo](https://github.com/MetaCubeX/mihomo) proxy core. You bring your
-own subscription; Kumo gives you a polished SwiftUI app, a friendly menu
-bar item, and — if you want — a command-line tool and automation hooks
-that match the GUI feature-for-feature.
+[Mihomo](https://github.com/MetaCubeX/mihomo) proxy core. Bring a
+subscription URL or a YAML / Clash config file, and Kumo provides a
+SwiftUI app, a menu bar item, and an optional command-line tool with
+matching functionality.
 
-If you have ever used a Mac proxy app and felt like it was either too
-sparse or buried under a wall of settings, Kumo is built to land in the
-middle. Daily controls — start, stop, switch nodes, toggle system proxy —
-are one click away. The deeper knobs are there when you need them, and
-they are not in your face when you do not.
+Start, stop, switch nodes, and toggle system proxy from the menu bar.
+Advanced settings remain accessible without cluttering the main
+interface.
 
-## What you will need
+## Requirements
 
-- A Mac running **macOS 15 Sequoia or newer**, on Apple Silicon
-  (M1 / M2 / M3 / M4).
-- A proxy **subscription URL** from your provider, or a YAML / Clash
-  config file you trust.
+- **macOS 15 Sequoia or newer**, running on Apple Silicon (M1 / M2 / M3 / M4).
+- A proxy **subscription URL** from a provider, or a trusted YAML / Clash
+  config file.
 
 <Callout type="info">
-You do **not** need a VPN provider, a developer account, or a
-NetworkExtension entitlement. Kumo never asks for the **Allow VPN
-Configuration** prompt.
+No VPN provider, developer account, or NetworkExtension entitlement is
+required. Kumo does not trigger the **Allow VPN Configuration** prompt.
 </Callout>
 
-## A reasonable first hour
+## First steps
 
 <Cards>
   <Card href="/docs/getting-started/install" title="1. Install Kumo">
     Download the DMG and drag Kumo into Applications.
   </Card>
   <Card href="/docs/getting-started/subscriptions" title="2. Add your subscription">
-    Paste your subscription URL and let Kumo download it.
+    Paste the subscription URL and let Kumo download it.
   </Card>
   <Card href="/docs/getting-started/daily-use" title="3. Use the dashboard">
     Learn what the dashboard, menu bar, and system proxy toggle do.
   </Card>
-  <Card href="/docs/getting-started/troubleshooting" title="4. Hit a snag?">
+  <Card href="/docs/getting-started/troubleshooting" title="4. Troubleshooting">
     Common problems and the fixes that usually work.
   </Card>
 </Cards>
 
-## Want to do more?
+## Next steps
 
-When you outgrow the GUI, the [Advanced track](/docs/advanced) shows
-you the `kumo` command line, custom profiles, Shortcuts integration, and
-the agent-skill bundle for coding agents. If you want to dig into the
-source or fix something, the [Contributing track](/docs/contributing)
-covers building from source and the moving parts inside. The
-[Internals](/docs/internals) and [Roadmap](/docs/roadmap) tracks are
-technical reference straight from the KumoApp source tree — useful if
-you want to read the code or plan ahead.
+The [Advanced track](/docs/advanced) covers the `kumo` command line,
+custom profiles, Shortcuts integration, and the agent-skill bundle for
+coding agents. The [Contributing track](/docs/contributing) explains how
+to build from source. [Internals](/docs/internals) and
+[Roadmap](/docs/roadmap) provide technical reference from the KumoApp
+source tree.
 
 ## Quick links
 
@@ -68,8 +62,8 @@ you want to read the code or plan ahead.
 
 ## What Kumo is not
 
-- Not a VPN service. You need a subscription from somewhere else to
-  actually go anywhere.
+- Not a VPN service. A separate subscription is required for proxy
+  servers.
 - Not a NetworkExtension. Kumo does not request the **Allow VPN
   Configuration** prompt and does not install a system VPN profile.
 - Not Windows or Linux software (today). Kumo is macOS-only and targets
