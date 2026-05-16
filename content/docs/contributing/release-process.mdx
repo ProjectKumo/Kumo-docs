@@ -5,8 +5,7 @@ description: How a Kumo release is built, signed, and shipped to users.
 
 import { Callout } from 'fumadocs-ui/components/callout';
 
-You probably don't need to know this to contribute. But it helps to
-understand the cycle when you're asking "when does my fix ship?"
+This page is useful background when asking "when does my fix ship?"
 
 ## Channels
 
@@ -42,7 +41,7 @@ This invokes `make app-release` followed by
 2. Computes a SHA-256 of the DMG.
 3. Writes `build/release/latest.yml` with that SHA-256.
 
-The artefacts then get uploaded to a GitHub Release. For stable, the
+The artifacts then get uploaded to a GitHub Release. For stable, the
 release is tagged `vX.Y.Z`. For beta, it's tagged `pre-release` (a
 moving tag).
 
@@ -70,7 +69,7 @@ there's a newer version. When there is:
 3. The detached installer (`app-update-installer.log`) mounts the DMG,
    copies `Kumo.app` over the current install, and relaunches.
 4. The SHA-256 from the manifest is verified against the downloaded
-   artefact before the installer is invoked. A mismatch aborts the
+   artifact before the installer is invoked. A mismatch aborts the
    update.
 
 Auto-install requires the current `Kumo.app` parent directory to be

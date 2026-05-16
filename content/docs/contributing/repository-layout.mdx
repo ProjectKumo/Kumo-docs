@@ -3,8 +3,6 @@ title: Repository layout
 description: What lives where in the Kumo source tree.
 ---
 
-Once you can build, the next thing you'll want is a map.
-
 ## Top-level layout
 
 ```text
@@ -37,7 +35,7 @@ Kumo deliberately splits responsibility across four libraries.
 
 ### `KumoCoreKit`
 
-The brain. Everything that is **not** UI lives here.
+Everything that is **not** UI lives here.
 
 ```text
 KumoCoreKit/
@@ -52,7 +50,7 @@ KumoCoreKit/
   Resources/              Bundled Sub-Store runtime, skill content
 ```
 
-`KumoCoreKit` has zero SwiftUI. It's pure async Swift with `Yams` for YAML.
+`KumoCoreKit` has zero SwiftUI. It is pure async Swift with `Yams` for YAML.
 That separation is what makes the CLI possible — both the app and `kumo`
 talk to the same controller.
 
@@ -70,13 +68,12 @@ The convention is that a command:
 2. Calls into `KumoCoreKit` for the real work.
 3. Renders the result as plain text or JSON.
 
-If you find yourself reaching for `Foundation.URLSession` or
-`Process` inside `KumoCLIKit`, that logic almost certainly belongs in
-`KumoCoreKit` instead.
+If `Foundation.URLSession` or `Process` is needed inside `KumoCLIKit`,
+that logic almost certainly belongs in `KumoCoreKit` instead.
 
 ### `KumoCLI`
 
-A tiny wrapper. The actual executable target. It exists so the library
+A tiny wrapper: the actual executable target. It exists so the library
 (`KumoCLIKit`) can be unit-tested without spawning a process.
 
 ### `KumoApp`
@@ -94,7 +91,7 @@ The future privileged helper. Will own TUN control, guarded system proxy
 changes, and signed-request transport over a Unix socket once service
 mode ships. Compiles today, but does not yet do useful work in v1.
 
-## Scripts you'll see
+## Scripts
 
 `Scripts/` holds the project's release machinery.
 
@@ -103,7 +100,7 @@ mode ships. Compiles today, but does not yet do useful work in v1.
 | `prepare_substore_runtime.sh` | Downloads the generated Sub-Store Node runtime into `Sources/KumoCoreKit/Resources/SubStore/`. |
 | `make_release_artifacts.sh` | Packages the Release `.app` into a notarizable DMG and emits `latest.yml`. |
 
-You usually invoke them indirectly via the corresponding `make` targets.
+These are usually invoked indirectly via the corresponding `make` targets.
 
 ## Engineering docs
 
@@ -117,9 +114,9 @@ The `docs/` folder is the source of truth for **how Kumo is built**:
 - `docs/quality/` — testing expectations.
 - `docs/standards/` — implementation conventions.
 
-These are written for people working on Kumo itself. The docs you're
-reading now (the public `Kumo-docs` site) are written for people **using**
-Kumo. Both matter.
+These are written for people working on Kumo itself. The docs on this
+site (the public `Kumo-docs`) are written for people **using** Kumo.
+Both matter.
 
 ## What's intentionally not in the repo
 
