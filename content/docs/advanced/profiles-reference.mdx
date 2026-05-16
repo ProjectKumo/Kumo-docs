@@ -6,18 +6,16 @@ description: Local YAML, remote subscriptions, refresh policy, useProxy, and the
 import { Callout } from 'fumadocs-ui/components/callout';
 
 A **profile** is a complete Mihomo configuration: proxies, proxy
-groups, rules, and DNS. Kumo keeps your profiles in
+groups, rules, and DNS. Kumo keeps profiles in
 `~/Library/Application Support/Kumo/profiles/` and remembers which one
 is active across launches.
 
-## Where profiles come from
-
-Three sources:
+## Profile sources
 
 | Source         | What it is                                                                          |
 | -------------- | ----------------------------------------------------------------------------------- |
-| **Remote URL** | A subscription URL your provider gives you. Refreshed on a schedule.                |
-| **Local file** | A YAML you author by hand or copy from another tool.                                |
+| **Remote URL** | A subscription URL from a provider. Refreshed on a schedule.                        |
+| **Local file** | A YAML authored by hand or copied from another tool.                                |
 | **Sub-Store**  | An output URL from the bundled Sub-Store backend. Looks remote to Kumo.             |
 
 Only one profile is active at a time. The active profile's effective
@@ -32,7 +30,7 @@ Mihomo actually loads.
 3. Drop in a YAML file.
 4. Save.
 
-Kumo copies the file into its profiles directory; your original is
+Kumo copies the file into its profiles directory; the original is
 untouched.
 
 ## Add a remote profile
@@ -50,25 +48,25 @@ profile.
 
 Remote profiles refresh:
 
-- Manually, when you click **Refresh** on the detail pane (or
+- Manually, when **Refresh** is clicked on the detail pane (or via
   `kumo profile refresh <url>`).
 - Automatically on Kumo launch, if more than one day has passed since
   the last refresh.
 - On demand from Shortcuts via the **Refresh Profile** App Intent.
 
-Subscription `Subscription-Userinfo` headers (used by some providers to
-report traffic) are parsed and shown in the profile detail pane.
+`Subscription-Userinfo` headers (used by some providers to report
+traffic) are parsed and shown in the profile detail pane.
 
 ### useProxy
 
 Some subscription URLs only work when fetched through the proxy itself
 (common in mainland China for foreign providers). Toggle **Refresh
 through Kumo** to make Kumo fetch via its own SOCKS port. The first
-fetch needs Kumo to already be running.
+fetch requires Kumo to already be running.
 
 ## Active profile vs effective config
 
-When you make a profile active, Kumo does:
+When a profile is made active, Kumo:
 
 1. Reads the profile YAML.
 2. Applies enabled [overrides](/docs/advanced/overrides) in order.
@@ -82,9 +80,8 @@ The original profile YAML is **never** mutated. Edits to
 
 ## Authoring a local profile
 
-You can author a YAML by hand, but most users start from a provider's
-subscription and customize it via overrides. If you do want to author
-one from scratch, follow the
+Most users start from a provider's subscription and customize it via
+overrides. To author a YAML from scratch, follow the
 [Mihomo configuration reference](https://wiki.metacubex.one/config/).
 Anything Mihomo accepts, Kumo accepts.
 
@@ -99,18 +96,17 @@ Today the CLI exposes URL-based refresh. The broader profile API
 (import, get content, update, delete) is wired into `KumoController`
 and is being added to the CLI surface.
 
-## Things that bite people
+## Common pitfalls
 
-- **Editing `work/config.yaml` directly.** Pointless — it is
-  regenerated on every start. Use [overrides](/docs/advanced/overrides)
-  instead.
-- **Two profiles fighting over the same group name.** Kumo only
-  activates one profile at a time, but if you switch profiles, the
-  selected node may not exist in the new one. Kumo falls back to the
-  group's first member.
+- **Editing `work/config.yaml` directly.** This file is regenerated on
+  every start. Use [overrides](/docs/advanced/overrides) instead.
+- **Two profiles with the same group name.** Kumo only activates one
+  profile at a time, but switching profiles may leave a selected node
+  that does not exist in the new one. Kumo falls back to the group's
+  first member.
 - **A subscription that returns HTML.** Some providers serve a login
-  page when your subscription has expired. Look at the raw response
-  with `curl <url>` to confirm.
+  page when a subscription has expired. Check the raw response with
+  `curl <url>` to confirm.
 
 <Callout type="info">
 Backups capture profiles too. See

@@ -5,10 +5,9 @@ description: Channels, the latest.yml manifest format, the runtime update flow, 
 
 import { Callout } from 'fumadocs-ui/components/callout';
 
-The
-[Getting Started version](/docs/getting-started/updates) covers what an
-ordinary user needs. This page is for people who want to understand the
-moving parts or host their own update feed.
+The [Getting Started version](/docs/getting-started/updates) covers what
+an ordinary user needs. This page is for understanding the moving
+parts or hosting a custom update feed.
 
 ## Release channels
 
@@ -56,7 +55,7 @@ The SHA-256 in the manifest is verified against the downloaded artifact
 before the installer is invoked. A checksum mismatch aborts the update.
 
 <Callout type="info">
-The download is asynchronous and resumable. If you close Kumo
+The download is asynchronous and resumable. If Kumo is closed
 mid-download, the next polling cycle picks up where it left off.
 </Callout>
 
@@ -64,13 +63,13 @@ mid-download, the next polling cycle picks up where it left off.
 
 Auto-replacement requires the current app's parent directory to be
 writable. If Kumo is in a protected location (or installed for the
-whole machine), the update flow reports a clear error and you can
-install the DMG manually from the download page in
+whole machine), the update flow reports a clear error and the DMG can
+be installed manually from the download page in
 **Settings → Updates**.
 
 ## Host your own feed
 
-To host your own feed (for private builds, an internal beta, or
+To host a custom feed (for private builds, an internal beta, or
 anything else):
 
 1. Build a notarized DMG.
@@ -79,7 +78,7 @@ anything else):
 4. Point **Settings → Updates → Manifest URL** at your `latest.yml`.
 
 Anything that can serve static files over HTTPS works — S3, R2, GitHub
-Pages, a private nginx, you name it.
+Pages, a private nginx, and so on.
 
 ## Manual check
 
@@ -90,14 +89,14 @@ check is also exposed in the custom About window.
 
 To roll back to a specific release:
 
-1. Download the DMG for the version you want from GitHub Releases.
+1. Download the DMG for the desired version from GitHub Releases.
 2. Quit Kumo.
 3. Replace `/Applications/Kumo.app` with the version from the DMG.
 4. Launch Kumo.
 
 `state.json` and `preferences.json` decode missing fields with
-defaults, so downgrades do not invalidate persisted state — but
-features added in newer versions will of course be absent.
+defaults, so downgrades do not invalidate persisted state. Features
+added in newer versions will of course be absent.
 
 ## See also
 

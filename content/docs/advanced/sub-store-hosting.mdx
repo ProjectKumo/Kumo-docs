@@ -5,15 +5,14 @@ description: Host your own Sub-Store backend, custom output formats, and how Kum
 
 import { Callout } from 'fumadocs-ui/components/callout';
 
-The [user-facing Sub-Store tour](/docs/getting-started/sub-store) covers
-the bundled backend that ships with Kumo. This page is for people who
-want to point Kumo at a different Sub-Store — for example one running
-on a NAS, a VPS, or in a Docker container — and share it across
-devices.
+The [Sub-Store user guide](/docs/getting-started/sub-store) covers the
+bundled backend that ships with Kumo. This page is for pointing Kumo at
+a different Sub-Store instance — for example one running on a NAS, a
+VPS, or in a Docker container — and sharing it across devices.
 
-## How the bundled backend works
+## Bundled backend
 
-When you open **Sub-Store** in Kumo for the first time, Kumo:
+When **Sub-Store** is opened in Kumo for the first time, Kumo:
 
 1. Copies the bundled Node.js binary and `sub-store.bundle.js` into
    `~/Library/Application Support/Kumo/substore/resources/`.
@@ -26,31 +25,30 @@ When you open **Sub-Store** in Kumo for the first time, Kumo:
 The backend lifecycle (start, stop, restart) is exposed through
 `kumo substore`.
 
-## Use a custom backend
+## Custom backend
 
-If you already run Sub-Store somewhere else and you want this Kumo to
-join it:
+To point Kumo at an existing Sub-Store instance:
 
 1. Open **Settings → Sub-Store**.
 2. Switch the source from **Bundled** to **Custom**.
-3. Paste the backend URL (something like `http://nas.local:3000`).
-4. Paste the access token if your backend has one.
+3. Paste the backend URL (for example `http://nas.local:3000`).
+4. Paste the access token if the backend has one.
 5. Save.
 
 Kumo stops the bundled backend on this Mac and points the embedded UI
-at your custom URL. The status card in the Sub-Store destination shows
+at the custom URL. The status card in the Sub-Store destination shows
 which mode is active.
 
 ### Custom backend requirements
 
-- Reachable from your Mac (Bonjour, local network, VPN, or public
+- Reachable from the Mac (Bonjour, local network, VPN, or public
   internet — Kumo does not care).
 - Speaks the standard Sub-Store API.
-- Trusts the access token you provide.
+- Trusts the access token provided.
 
 <Callout type="info">
-Custom backends are not auto-prepared by Kumo. You are responsible for
-updating, securing, and backing up the data on your own server.
+Custom backends are not auto-prepared by Kumo. Updating, securing, and
+backing up the data on the server is the user's responsibility.
 </Callout>
 
 ## Output formats
@@ -59,21 +57,21 @@ Sub-Store can output combinations in several formats:
 
 | Format         | When to use it                                                              |
 | -------------- | --------------------------------------------------------------------------- |
-| **ClashMeta**  | Default. The output Kumo's Mihomo core understands.                         |
+| **ClashMeta**  | Default. The output Kumo Mihomo core understands.                           |
 | **Clash**      | For older Clash-compatible clients. Kumo also accepts it.                   |
 | **Surge**      | For Surge / Stash.                                                          |
 | **Quantumult X** | For QX.                                                                   |
 
-When you paste a Sub-Store URL into Kumo, append `?target=ClashMeta` if
-your share URL doesn't already specify a target. Forcing `ClashMeta`
-gets you the richest feature set (proxy providers, rule providers, etc.).
+When pasting a Sub-Store URL into Kumo, append `?target=ClashMeta` if
+the share URL does not already specify a target. Forcing `ClashMeta`
+gets the richest feature set (proxy providers, rule providers, etc.).
 
 ## Force a rebuild
 
 By default Sub-Store caches the combined output for a few minutes. If
-you just edited a combination and want Kumo to see the new version
+a combination was just edited and Kumo needs to see the new version
 immediately, hit **Refresh** on the Kumo profile that points at the
-combination, **and** append `&noCache=true` to the URL on the first
+combination, and append `&noCache=true` to the URL on the first
 refresh.
 
 ## Lifecycle commands
@@ -86,12 +84,12 @@ kumo substore stop
 kumo substore restart
 ```
 
-`prepare` is run automatically the first time you open Sub-Store in the
-GUI, so you usually do not need to call it by hand. It is safe to run
-again — it overwrites the bundled resources with whatever shipped in
-the current Kumo version, useful after a Kumo update.
+`prepare` runs automatically the first time Sub-Store is opened in the
+GUI, so it is usually not needed by hand. It is safe to run again — it
+overwrites the bundled resources with whatever shipped in the current
+Kumo version, useful after a Kumo update.
 
-## Sub-Store and backups
+## Backups
 
 `kumo backup export` includes the Sub-Store data directory. Restoring a
-backup brings your subscriptions and combinations back.
+backup brings subscriptions and combinations back.

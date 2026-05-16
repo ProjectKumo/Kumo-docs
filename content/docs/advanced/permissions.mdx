@@ -6,7 +6,7 @@ description: When macOS asks for elevated privileges, and what Kumo deliberately
 import { Callout } from 'fumadocs-ui/components/callout';
 
 The first version of Kumo intentionally avoids privileged helpers.
-macOS will ask for **administrator authorization** in a few narrowly
+macOS asks for **administrator authorization** in a few narrowly
 scoped situations and nothing else.
 
 ## What Kumo does not do
@@ -15,10 +15,10 @@ scoped situations and nothing else.
 - It does **not** register a VPN profile.
 - It does **not** ask for the **Allow VPN Configuration** prompt.
 
-System proxy uses `networksetup`, the same tool you can invoke from the
+System proxy uses `networksetup`, the same tool available from the
 command line. TUN uses the standard macOS `utun*` device.
 
-## When Kumo does ask for admin
+## When Kumo asks for admin
 
 | Action                                              | What macOS prompts for                              |
 | --------------------------------------------------- | --------------------------------------------------- |
@@ -37,7 +37,7 @@ The app bundle ships with these entitlements:
 - **App Sandbox** — **disabled** in v1. Spawning Mihomo and Sub-Store
   as child processes plus invoking `networksetup` is incompatible with
   the sandbox's restrictions on `Process` and shell-out. App Sandbox
-  + helper-bundle separation is on the roadmap.
+  plus helper-bundle separation is on the roadmap.
 - **Network client** — enabled. Required for the Mihomo controller and
   for fetching subscription URLs.
 - **Network server** — enabled. Required for the PAC HTTP listener and
@@ -65,26 +65,26 @@ Until then:
 
 ## Permission FAQ
 
-### Why isn't Kumo sandboxed?
+### Why is Kumo not sandboxed?
 
 v1 ships with the sandbox disabled because spawning Mihomo and
 Sub-Store as child processes is incompatible with the sandbox's
 restrictions on `Process` and `networksetup`. App Sandbox plus
 helper-bundle separation is on the roadmap.
 
-### Why doesn't Kumo ask for "Allow VPN Configuration"?
+### Why does Kumo not ask for "Allow VPN Configuration"?
 
 That prompt is for NetworkExtensions. Kumo uses system proxy and TUN
-directly, so it doesn't trigger the prompt.
+directly, so it does not trigger the prompt.
 
-### Where can I see what runs as root?
+### What runs as root?
 
 Nothing in Kumo runs as root in v1. The only
 `with administrator privileges` shell calls are short-lived `ln` /
 `rm` invocations during CLI symlink install / uninstall.
 
 <Callout type="info">
-If you see something else asking for root, double-check what is
-actually triggering it. Kumo's prompts always come from the
-**Kumo** application (visible in the auth dialog).
+If something else asks for root, verify what is actually triggering it.
+Kumo's prompts always come from the **Kumo** application (visible in
+the auth dialog).
 </Callout>

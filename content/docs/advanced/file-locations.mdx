@@ -14,7 +14,7 @@ and the planned service mode all agree on where things live.
 ~/Library/Application Support/Kumo/
 ```
 
-You can print this from the CLI:
+Print this from the CLI:
 
 ```bash
 kumo config list
@@ -56,7 +56,7 @@ Kumo/
   preferences.json            # App-level preferences.
 ```
 
-## What each top-level file means
+## Top-level files
 
 ### `state.json`
 
@@ -70,7 +70,7 @@ Stores the runtime state shared between GUI and CLI:
   MTU, ICMP forwarding).
 - Last status message.
 
-Decode tolerates missing fields, so a Kumo update can add new keys
+Decoding tolerates missing fields, so a Kumo update can add new keys
 without invalidating an older `state.json`.
 
 ### `preferences.json`
@@ -130,6 +130,7 @@ make reset-local-state
 `~/Library/Application Support/Kumo/` entirely.)
 
 <Callout type="info">
-Do not run `make reset-local-state` against a real install unless you
-mean it. Re-running first-launch onboarding is a side effect.
+Do not run `make reset-local-state` against a real install unless the
+intention is to erase everything. Re-running first-launch onboarding is
+a side effect.
 </Callout>
