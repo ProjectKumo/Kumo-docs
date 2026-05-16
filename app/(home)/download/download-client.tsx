@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { Apple, Monitor, Terminal, type LucideIcon } from 'lucide-react';
+import { useEffect, useState, type ComponentType, type SVGProps } from 'react';
+import { SiApple, SiLinux } from 'react-icons/si';
 import type { LatestRelease, Platform } from '@/lib/releases';
 import {
   formatSize,
@@ -104,14 +104,31 @@ async function detectPlatform(): Promise<Platform | null> {
   return 'linux-x64';
 }
 
-const OS_ICON: Record<'macos' | 'windows' | 'linux', LucideIcon> = {
-  macos: Apple,
-  // Lucide has no Windows brand mark; a generic monitor reads as "desktop OS"
-  // without leaning on emoji or a tortured Unicode square.
-  windows: Monitor,
-  // Penguin emoji is the canonical Linux mascot but reads as decoration; a
-  // terminal glyph is the universally-recognised shorthand on download pages.
-  linux: Terminal,
+// Simple Icons dropped the Windows mark in 2022 over brand-rights concerns,
+// so we inline the canonical 4-square logo here as a static SVG to keep the
+// macOS / Windows / Linux trio visually consistent (all filled brand glyphs).
+function SiWindowsLegacy(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      role="img"
+      viewBox="0 0 24 24"
+      xmlns="http://www.w3.org/2000/svg"
+      {...props}
+    >
+      <path
+        fill="currentColor"
+        d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.9-1.801"
+      />
+    </svg>
+  );
+}
+
+type OsIcon = ComponentType<SVGProps<SVGSVGElement>>;
+
+const OS_ICON: Record<'macos' | 'windows' | 'linux', OsIcon> = {
+  macos: SiApple,
+  windows: SiWindowsLegacy,
+  linux: SiLinux,
 };
 
 const OS_LABEL: Record<'macos' | 'windows' | 'linux', string> = {
@@ -191,7 +208,6 @@ export function DownloadClient({ release, releasesUrl }: DownloadClientProps) {
                     <OsIcon
                       aria-hidden="true"
                       className="size-3.5 shrink-0"
-                      strokeWidth={2}
                     />
                     {OS_LABEL[os]}
                   </span>
