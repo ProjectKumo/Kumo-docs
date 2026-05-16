@@ -17,16 +17,16 @@ export default function HomePage() {
       </p>
       <div className="flex flex-wrap gap-3 justify-center">
         <Link
-          href="/docs"
+          href="/download"
           className="rounded-full bg-fd-primary text-fd-primary-foreground px-5 py-2.5 text-sm font-medium hover:opacity-90"
         >
-          Read the docs
+          Install Kumo
         </Link>
         <Link
-          href="/docs/getting-started/install"
+          href="/docs"
           className="rounded-full border border-fd-border px-5 py-2.5 text-sm font-medium hover:bg-fd-accent"
         >
-          Install Kumo
+          Read the docs
         </Link>
         <Link
           href="https://github.com/ProjectKumo/KumoApp"
