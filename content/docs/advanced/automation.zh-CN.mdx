@@ -1,0 +1,89 @@
+---
+title: 自动化
+description: 快捷指令、App Intents、Spotlight、Services — 将 Kumo 接入 macOS 其余部分。
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+Kumo 通过四种方式向 macOS 自动化暴露自身:
+
+1. **App Intents**,供快捷指令和 Siri 使用。
+2. **Spotlight**,供直接输入动作使用。
+3. **Services**,供右键菜单使用。
+4. **`kumo` CLI**,供 shell 脚本和 `osascript` 使用。
+
+按需选择即可。
+
+## App Intents(快捷指令)
+
+Kumo 向快捷指令注册了五个 App Intent:
+
+| Intent                          | 功能                                      |
+| ------------------------------- | ----------------------------------------- |
+| **Start Kumo**                  | 启动核心。                                |
+| **Stop Kumo**                   | 停止核心。                                |
+| **Refresh Profile**             | 刷新活跃配置。                            |
+| **Set Mode**                    | 切换出站模式。接受参数。                  |
+| **Toggle System Proxy**         | 翻转 macOS 系统代理开关。                 |
+
+打开**快捷指令.app**并搜索 "Kumo" 即可找到它们。它们可以与快捷指令提供的任何其他功能链接 — 键盘快捷键、菜单栏快捷指令、专注模式过滤器、自动化。
+
+### Set Mode 参数值
+
+**Set Mode** intent 接受一个枚举:
+
+| 值       | 含义                                                    |
+| -------- | ------------------------------------------------------- |
+| `rule`   | 基于规则的路由(默认)。                                  |
+| `global` | 所有流量走选中的组。                                    |
+| `direct` | 所有流量直连。                                          |
+
+## Spotlight
+
+在 Spotlight 中输入(默认 `⌘Space`)并运行以下动作:
+
+- "Start Kumo"
+- "Stop Kumo"
+- "Toggle Kumo system proxy"
+- "Refresh Kumo profile"
+
+Spotlight 底层使用相同的 App Intents,因此快捷指令中可见的任何内容也都可以输入。
+
+## Services
+
+在任何应用中右键选中的文本,Kumo 会注册一组 Services:
+
+- **Add subscription URL to Kumo** — 如果选中的内容看起来像订阅 URL,这会打开 Kumo 的添加配置面板并预填充。
+- **Test in Kumo** — 如果选中的内容是主机名,使用当前代理链运行快速可达性测试。
+
+Services 在 macOS Sequoia 中默认关闭。从 **系统设置 → 键盘 → 键盘快捷键 → Services → Text** 中启用。
+
+## Shell 脚本
+
+快捷指令能做的,CLI 都能做:
+
+```bash
+# 通过 Hammerspoon 等工具绑定到热键的快速切换:
+if kumo status --json | jq -e '.data.systemProxy.enabled' >/dev/null; then
+  kumo sysproxy off --json
+else
+  kumo sysproxy on --json
+fi
+```
+
+CLI 是脚本和编码 Agent 应该瞄准的目标。App Intents 是人类在快捷指令中应该瞄准的目标。
+
+<Callout type="info">
+CLI 无论 GUI 是否运行都能工作。快捷指令和 Spotlight intent 需要 GUI 正在运行,因为它们通过 App Intents 框架。
+</Callout>
+
+## 示例
+
+社区将 Kumo 接入其他工具的方式:
+
+- **专注模式过滤器** — 在 "个人" 专注模式期间关闭系统代理。
+- **登录项** — 启动 Kumo 并刷新配置。
+- **Hammerspoon** — 将 `⌃⌥⌘P` 绑定到 "切换系统代理"。
+- **Stream Deck** — 每个模式一个按钮。
+
+在 [GitHub Discussions](https://github.com/ProjectKumo/KumoApp/discussions) 中分享配置。

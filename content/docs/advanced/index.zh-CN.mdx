@@ -1,0 +1,58 @@
+---
+title: 进阶
+description: 命令行、自定义配置、快捷指令集成与自动化。
+---
+
+import { Cards, Card } from 'fumadocs-ui/components/card';
+
+进阶单元涵盖 GUI 以外的所有内容：`kumo` 命令行工具、自定义配置、覆写规则、自动化钩子,以及面向编码 Agent 的技能包。
+
+所有这些功能都建立在 GUI 使用的同一套 `KumoCoreKit`  facade 之上,因此命令行与 GUI 的状态始终一致。
+
+## 主题
+
+<Cards>
+  <Card title="命令行"
+        description="安装 kumo CLI,在任何目录运行,获取命令补全。"
+        href="/docs/advanced/command-line" />
+  <Card title="CLI 参考"
+        description="每条命令、每个标志。为脚本和 Agent 提供可预测的 JSON 输出。"
+        href="/docs/advanced/cli-reference" />
+  <Card title="配置参考"
+        description="本地 YAML、远程订阅、刷新策略、useProxy。"
+        href="/docs/advanced/profiles-reference" />
+  <Card title="覆写规则"
+        description="不 fork 订阅即可微调。合并算子、示例与注意事项。"
+        href="/docs/advanced/overrides" />
+  <Card title="Sub-Store 托管"
+        description="自建 Sub-Store 后端并指向 Kumo。"
+        href="/docs/advanced/sub-store-hosting" />
+  <Card title="自动化"
+        description="快捷指令、App Intents、Spotlight、Services。"
+        href="/docs/advanced/automation" />
+  <Card title="Agent 技能"
+        description="让编码 Agent 安全、结构化地访问 CLI。"
+        href="/docs/advanced/agent-skills" />
+  <Card title="键盘快捷键"
+        description="Kumo 监听的所有按键。"
+        href="/docs/advanced/keyboard-shortcuts" />
+  <Card title="文件位置"
+        description="Kumo 存储数据的位置及每个文件的含义。"
+        href="/docs/advanced/file-locations" />
+  <Card title="权限"
+        description="macOS 会在什么情况下请求权限,以及 Kumo 刻意不做的事。"
+        href="/docs/advanced/permissions" />
+  <Card title="自动更新内部机制"
+        description="更新流程在底层如何工作,频道、清单。"
+        href="/docs/advanced/auto-updates" />
+</Cards>
+
+## 约定
+
+- 代码示例均为真实命令,可直接复制运行。
+- JSON 示例使用实际输出格式 — `{ ok, data?, error? }` — 脚本和 Agent 可据此分支。
+- 如果 GUI 已覆盖同一主题,页面会链接回
+  [上手](/docs/getting-started) 版本。
+
+这些设计决策的工程原理见
+[参与贡献](/docs/contributing) 单元。

@@ -1,0 +1,87 @@
+---
+title: Sub-Store 托管
+description: 自建 Sub-Store 后端、自定义输出格式,以及 Kumo 如何与它通信。
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+[Sub-Store 用户指南](/docs/getting-started/sub-store) 涵盖了 Kumo 内置的
+后端。本页面向将 Kumo 指向不同 Sub-Store 实例的场景 — 例如运行在 NAS、
+VPS 或 Docker 容器中的实例 — 以及跨设备共享。
+
+## 内置后端
+
+第一次在 Kumo 中打开 **Sub-Store** 时,Kumo:
+
+1. 将捆绑的 Node.js 二进制文件和 `sub-store.bundle.js` 复制到
+   `~/Library/Application Support/Kumo/substore/resources/`。
+2. 用该 bundle 启动 Node,监听一个随机 localhost 端口。
+3. 将选定的端口和一个随机生成的 token 写入
+   `~/Library/Application Support/Kumo/substore/status.json`。
+4. 在原生面板中嵌入 Sub-Store Web UI,指向该本地端口。
+
+后端生命周期(启动、停止、重启)通过 `kumo substore` 暴露。
+
+## 自定义后端
+
+要将 Kumo 指向现有 Sub-Store 实例:
+
+1. 打开 **设置 → Sub-Store**。
+2. 将来源从 **内置** 切换为 **自定义**。
+3. 粘贴后端 URL(例如 `http://nas.local:3000`)。
+4. 如果后端有访问 token,粘贴 token。
+5. 保存。
+
+Kumo 会停止该 Mac 上的内置后端,并将嵌入式 UI 指向自定义 URL。
+Sub-Store 目的地的状态卡片显示当前处于哪种模式。
+
+### 自定义后端要求
+
+- 可从该 Mac 访问(Bonjour、本地网络、VPN 或公网 — Kumo 不关心)。
+- 使用标准 Sub-Store API。
+- 信任提供的访问 token。
+
+<Callout type="info">
+自定义后端不会由 Kumo 自动准备。服务器的更新、安全加固和数据备份
+是用户的责任。
+</Callout>
+
+## 输出格式
+
+Sub-Store 可以以多种格式输出组合:
+
+| 格式           | 适用场景                                                        |
+| -------------- | ----------------------------------------------------------------|
+| **ClashMeta**  | 默认。Kumo Mihomo 核心理解的输出。                              |
+| **Clash**      | 用于旧版 Clash 兼容客户端。Kumo 也接受。                        |
+| **Surge**      | 用于 Surge / Stash。                                            |
+| **Quantumult X** | 用于 QX。                                                     |
+
+将 Sub-Store URL 粘贴到 Kumo 时,如果分享 URL 未指定 target,则追加
+`?target=ClashMeta`。强制使用 `ClashMeta` 可获得最丰富的功能集(代理
+提供者、规则提供者等)。
+
+## 强制重建
+
+默认情况下 Sub-Store 会缓存组合输出几分钟。如果组合刚编辑完而 Kumo
+需要立即看到新版本,点击指向该组合的 Kumo 配置上的 **刷新**,并在
+第一次刷新时向 URL 追加 `&noCache=true`。
+
+## 生命周期命令
+
+```bash
+kumo substore status --json       # 是否运行中?哪种模式?哪个端口?
+kumo substore prepare             # 将捆绑资源复制到 ~/Library/...
+kumo substore start
+kumo substore stop
+kumo substore restart
+```
+
+`prepare` 在 GUI 中首次打开 Sub-Store 时自动运行,因此通常不需要手动
+执行。再次运行是安全的 — 它会用当前 Kumo 版本自带的资源覆盖内置资源,
+在 Kumo 更新后很有用。
+
+## 备份
+
+`kumo backup export` 包含 Sub-Store data 目录。恢复备份会带回订阅和
+组合。

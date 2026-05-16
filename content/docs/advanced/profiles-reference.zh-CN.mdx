@@ -1,0 +1,105 @@
+---
+title: 配置参考
+description: 本地 YAML、远程订阅、刷新策略、useProxy 与合并顺序。
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+**配置**是一份完整的 Mihomo 配置:代理、代理组、规则与 DNS。Kumo 将
+配置保存在 `~/Library/Application Support/Kumo/profiles/` 中,并在每次
+启动时记住哪一份是活跃的。
+
+## 配置来源
+
+| 来源           | 说明                                                                            |
+| -------------- | ------------------------------------------------------------------------------- |
+| **Remote URL** | 服务商提供的订阅 URL。按计划刷新。                                              |
+| **Local file** | 手写或从其他工具复制的 YAML。                                                   |
+| **Sub-Store**  | 内置 Sub-Store 后端输出的 URL。对 Kumo 而言看起来是远程的。                     |
+
+同一时间只有一份配置是活跃的。活跃配置的有效配置 — 经过覆写规则后 —
+被写入
+`~/Library/Application Support/Kumo/work/config.yaml`,这是 Mihomo 实际
+加载的内容。
+
+## 添加本地配置
+
+1. **配置 → +**。
+2. 选择 **从文件**。
+3. 拖入 YAML 文件。
+4. 保存。
+
+Kumo 将文件复制到自己的配置目录;原始文件不受影响。
+
+## 添加远程配置
+
+1. **配置 → +**。
+2. 粘贴 URL。
+3. 如需,勾选 **通过 Kumo 刷新**(`useProxy`),如果该订阅只有
+   通过代理本身才能访问。
+4. 保存。
+
+Kumo 立即获取 URL,解析 YAML,并将其存储为一份配置。
+
+### 刷新策略
+
+远程配置刷新:
+
+- 手动,点击详情面板的 **刷新**(或通过
+  `kumo profile refresh <url>`)。
+- Kumo 启动时自动刷新,如果距离上次刷新已超过一天。
+- 通过快捷指令的 **刷新配置** App Intent 按需刷新。
+
+部分服务商使用 `Subscription-Userinfo` 头来报告流量,会被解析并显示在
+配置详情面板中。
+
+### useProxy
+
+部分订阅 URL 只有在通过代理本身获取时才能工作(中国大陆访问境外
+服务商时常见)。打开 **通过 Kumo 刷新** 开关,让 Kumo 通过自身的 SOCKS
+端口获取。第一次获取需要 Kumo 已经在运行。
+
+## 活跃配置与有效配置
+
+当一份配置被设为活跃时,Kumo:
+
+1. 读取配置 YAML。
+2. 按顺序应用启用的 [覆写规则](/docs/advanced/overrides)。
+3. 应用 Kumo 控制的设置(mixed port、控制器端点、`find-process-mode: always`、
+   TUN 开启时的 DNS 阻止等)。
+4. 将合并结果写入 `work/config.yaml`。
+5. 通知 Mihomo 重新加载。
+
+原始配置 YAML **永远不会**被修改。直接编辑 `work/config.yaml` 不会被
+保留。
+
+## 编写本地配置
+
+大多数用户从服务商的订阅开始,通过覆写规则进行定制。如需从零编写
+YAML,请参考
+[Mihomo 配置参考](https://wiki.metacubex.one/config/)。
+Mihomo 接受的任何内容,Kumo 都接受。
+
+## 从 CLI 管理配置生命周期
+
+```bash
+# 通过订阅 URL 刷新远程配置。
+kumo profile refresh "https://example.com/sub.yaml"
+```
+
+目前 CLI 暴露基于 URL 的刷新。更广泛的配置 API(导入、获取内容、更新、
+删除)已接入 `KumoController` 供 GUI 使用,正在加入 CLI。
+
+## 常见陷阱
+
+- **直接编辑 `work/config.yaml`。** 该文件每次启动都会重新生成。请改用
+  [覆写规则](/docs/advanced/overrides)。
+- **两份配置使用相同的组名。** Kumo 一次只激活一份配置,但切换配置时
+  可能留下新配置中不存在的已选节点。Kumo 会回退到该组的第一个成员。
+- **订阅返回 HTML。** 部分服务商在订阅过期时返回登录页面。用
+  `curl <url>` 检查原始响应以确认。
+
+<Callout type="info">
+备份也会捕获配置。见 CLI 参考中的
+[backup](/docs/advanced/cli-reference#backup)。
+</Callout>
