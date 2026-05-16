@@ -1,0 +1,97 @@
+---
+title: 自动更新内部机制
+description: 频道、latest.yml 清单格式、运行时更新流程,以及如何托管自己的更新源。
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+[上手版本](/docs/getting-started/updates) 覆盖了普通用户需要知道的内容。
+本页面向理解内部机制或托管自定义更新源的需求。
+
+## 发布频道
+
+| 频道   | 清单 URL                                                                                      |
+| ------ | --------------------------------------------------------------------------------------------- |
+| stable | `https://github.com/ProjectKumo/KumoApp/releases/latest/download/latest.yml`                  |
+| beta   | `https://github.com/ProjectKumo/KumoApp/releases/download/pre-release/latest.yml`             |
+
+**设置 → 更新** 可以覆盖清单 URL 以用于私有源或本地测试。留空则使用
+频道默认值。
+
+## 清单格式
+
+`latest.yml` 随每次发布一起发布:
+
+```yaml
+version: 0.0.1
+channel: stable
+downloadURL: https://github.com/ProjectKumo/KumoApp/releases/download/0.0.1/Kumo-macos-0.0.1-arm64.dmg
+assetName: Kumo-macos-0.0.1-arm64.dmg
+sha256: <64-character-sha256>
+releaseNotes: |
+  See https://github.com/ProjectKumo/KumoApp/releases/tag/0.0.1
+```
+
+相同字段也接受 JSON,用于本地测试和向后兼容。
+
+## 运行时流程
+
+1. `AppUpdateManager` 每五分钟轮询一次清单。
+2. 发现新版本时,Kumo 发布一条 **macOS 通知**,包含三个动作:
+   - **立即安装**
+   - **稍后提醒**
+   - **立即重启**(下载就绪后)
+3. 下载写入
+   `~/Library/Application Support/Kumo/updates/downloads/`。
+4. 分离式 DMG 安装器日志写入
+   `~/Library/Application Support/Kumo/logs/app-update-installer.log`。
+5. 安装器挂载 DMG,将 `Kumo.app` 覆盖当前安装,并重新启动应用。
+
+清单中的 SHA-256 会在调用安装器前与下载的工件进行校验。校验和不匹配
+会中止更新。
+
+<Callout type="info">
+下载是异步且可恢复的。如果 Kumo 在下载中途关闭,下次轮询会从中断处
+继续。
+</Callout>
+
+## 自动安装失败时
+
+自动替换要求当前应用的父目录可写。如果 Kumo 位于受保护位置(或为
+整机安装),更新流程会报告清晰的错误,DMG 可以从
+**设置 → 更新** 中的下载页面手动安装。
+
+## 托管自己的更新源
+
+要托管自定义更新源(用于私有构建、内部测试或其他用途):
+
+1. 构建一份公证后的 DMG。
+2. 计算其 SHA-256。
+3. 使用上述字段发布 `latest.yml`。
+4. 在 **设置 → 更新 → 清单 URL** 中指向你的 `latest.yml`。
+
+任何能通过 HTTPS 提供静态文件的服务都可以 — S3、R2、GitHub Pages、私有
+nginx 等。
+
+## 手动检查
+
+打开 **设置 → 更新** 并点击 **检查更新**。同样的检查也暴露在自定义
+关于窗口中。
+
+## 回滚
+
+要回退到特定版本:
+
+1. 从 GitHub Releases 下载目标版本的 DMG。
+2. 退出 Kumo。
+3. 用 DMG 中的版本替换 `/Applications/Kumo.app`。
+4. 启动 Kumo。
+
+`state.json` 和 `preferences.json` 会对缺失字段使用默认值解码,因此降级
+不会使持久化状态失效。当然,新版本添加的功能将不可用。
+
+## 另见
+
+- [权限](/docs/advanced/permissions) — 为什么更新在 v1 中不请求 root。
+- [文件位置](/docs/advanced/file-locations) — 安装器日志和下载缓存
+  的位置。

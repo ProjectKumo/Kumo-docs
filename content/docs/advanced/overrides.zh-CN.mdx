@@ -1,0 +1,148 @@
+---
+title: 覆写规则
+description: 不 fork 订阅即可微调。合并算子、示例与注意事项。
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+**覆写规则**是一个小型 YAML 或 JavaScript 文件,Kumo 在 Mihomo 加载前将其
+合并到配置之上。覆写规则适用于:
+
+- 添加个人规则("将 `mygithub.com` 发送到特定节点")。
+- 不 fork 上游配置即可调整 DNS 设置。
+- 替换一个嘈杂的代理组为自己的。
+
+覆写规则保存在
+`~/Library/Application Support/Kumo/overrides/files/` 中,索引文件
+(`overrides.json`) 映射哪些覆写规则以什么顺序启用。
+
+## 合并顺序
+
+每次 Kumo 启动核心时(或活跃配置、覆写规则列表或顺序变更时):
+
+1. 从活跃配置的 YAML 开始。
+2. 按保存的顺序应用启用的覆写规则。
+3. 应用 Kumo 控制的键(`mixed-port`、`external-controller`、
+   `find-process-mode`、TUN 开启时的 DNS 阻止)。
+4. 将合并后的 YAML 写入 `work/config.yaml`。
+
+如果两个覆写规则触碰同一个键,**后应用的**获胜。
+
+## 合并算子
+
+Kumo 理解两类算子家族。两者可以在单个覆写规则文件中混用。
+
+### Sparkle 风格 prefix / suffix / replace
+
+```yaml
++rules:        # 前置
+  - DOMAIN-SUFFIX,mygithub.com,DIRECT
+
+rules+:        # 追加
+  - DOMAIN-KEYWORD,ads,REJECT
+
+key!:          # 替换(覆盖整个键)
+mode!: rule
+```
+
+### Clash Verge Rev 风格 prepend / append / delete
+
+```yaml
+prepend-rules:
+  - DOMAIN-SUFFIX,mygithub.com,DIRECT
+
+append-rules:
+  - DOMAIN-KEYWORD,ads,REJECT
+
+delete-rules:
+  - "MATCH,Proxy"           # 删除字面 MATCH 规则
+```
+
+两种风格可以组合。Kumo 按定义的顺序应用 prefix、suffix、replacement、
+prepend、append 和 delete,因此无论使用哪种拼写,结果都相同。
+
+## 完整示例
+
+给定一份包含以下内容的配置:
+
+```yaml
+rules:
+  - DOMAIN-KEYWORD,google,Proxy
+  - MATCH,DIRECT
+```
+
+以及一份覆写规则:
+
+```yaml
++rules:
+  - DOMAIN-SUFFIX,myhomeserver.lan,DIRECT
+rules+:
+  - DOMAIN-KEYWORD,porn,REJECT
+delete-rules:
+  - "MATCH,DIRECT"
++rules:
+  - MATCH,Proxy
+```
+
+有效的规则列表变为:
+
+```yaml
+rules:
+  - DOMAIN-SUFFIX,myhomeserver.lan,DIRECT
+  - DOMAIN-KEYWORD,google,Proxy
+  - DOMAIN-KEYWORD,porn,REJECT
+  - MATCH,Proxy
+```
+
+## JavaScript 覆写规则
+
+放入 `.js` 文件。Kumo 在沙箱化 JS 引擎中运行它,期望一个导出的
+`main(config)` 函数返回修改后的配置。当 YAML 无法表达所需变更时
+使用。
+
+```javascript
+// overrides/files/normalize-groups.js
+export function main(config) {
+  for (const group of config['proxy-groups'] ?? []) {
+    if (group.type === 'select') {
+      group.proxies = group.proxies.filter(p => !p.includes('Trial'));
+    }
+  }
+  return config;
+}
+```
+
+JS 覆写规则只能看到当前已合并的配置。它们无法在沙箱外读写文件。
+
+## 管理覆写规则
+
+从 GUI: 侧边栏中的 **覆写规则**。拖动以重新排序,点击复选框启用/禁用,
+点击覆写规则以编辑其内容。
+
+从文件系统:
+
+```text
+overrides/
+  overrides.json        # 有序列表,启用标志
+  files/
+    rules.yaml
+    normalize-groups.js
+    ...
+```
+
+`overrides.json` 和 `files/` 中的文件可以手动编辑。Kumo 在下次核心
+重新加载时重新读取它们。
+
+## 常见陷阱
+
+- **`mode!: rule` 不会改变*当前*模式。** 它设置配置磁盘上的 `mode` 键。
+  如果模式已在运行时切换,运行时值获胜。
+- **YAML 中空 `delete-rules`** 会被求值为 `null`,而非空列表。使用
+  `delete-rules: []` 显式禁用它。
+- **覆写规则顺序很重要。** 禁用并重新启用一个覆写规则会将它放到列表
+  末尾。把它拖回原来的位置。
+
+<Callout type="info">
+`find-process-mode: always` 键由 Kumo 控制。如果覆写规则将其设置为
+其他值,连接目的地将停止显示应用图标。
+</Callout>

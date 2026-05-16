@@ -1,0 +1,90 @@
+---
+title: Agent 技能
+description: 让编码 Agent 通过一个小的、安全的、描述良好的命令表面来控制 Kumo。
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+现代编码 Agent(Cursor、Claude Code、Codex、Gemini Code Assist、
+Agents.md 风格配置)会从众所周知的目录读取**技能文件**,以便了解
+它们在环境中能做什么。
+
+Kumo 内置了一个技能 — `kumo-cli` — 教会 Agent:
+
+- JSON 信封的形状(`ok`、`data`、`error`)。
+- Agent 应该使用的安全命令集。
+- 任何写入系统状态的操作都遵循 `--dry-run` 约定。
+- 出错时去哪里查看日志。
+
+该技能将 Agent 限制在只读状态查询、节点切换、订阅刷新和日志检查。
+不允许任意 shell 执行。
+
+## 安装技能
+
+### 从 GUI 安装
+
+首次启动的引导面板会询问启用哪些 Agent。以后也可以从 **设置 → 通用 → Agent 技能** 或侧边栏中的 **Agent 技能** 目的地运行。
+
+对于每个支持的 Agent,选择:
+
+- **Global** — 安装到 Agent 的用户级技能目录。
+- **Project** — 安装到当前项目(仅限支持 per-project 技能的 Agent)。
+
+每行显示目标路径、技能当前是否已安装,以及是否与运行中 Kumo 的版本保持最新。
+
+### 从 CLI 安装
+
+```bash
+kumo skills status --json
+kumo skills install --agent claude --scope global
+kumo skills install --agent all
+kumo skills install --agent cursor --scope project --dry-run --json
+kumo skills uninstall --agent cursor --scope project
+```
+
+`--agent` 接受 `cursor`、`claude`、`codex`、`gemini`、`agents` 或
+`all`。`--agent all --scope project` 只针对支持 project scope 的 Agent。
+
+## 技能路径
+
+| Agent       | Global 路径                                 | Project 路径                  |
+| ----------- | ------------------------------------------- | ----------------------------- |
+| Cursor      | `~/.cursor/agents/kumo-cli`                 | `./.cursor/agents/kumo-cli`   |
+| Claude Code | `~/.claude/skills/kumo-cli`                 | `./.claude/skills/kumo-cli`   |
+| Codex       | `~/.codex/skills/kumo-cli`                  | — (不支持)                    |
+| Gemini      | `~/.gemini/skills/kumo-cli`                 | — (不支持)                    |
+| agents.md   | `~/agents/kumo-cli`                         | `./agents/kumo-cli`           |
+
+## 默认非破坏性
+
+如果目标位置的技能目录已存在但并非由 Kumo 写入(例如克隆了同事的设置),
+安装会失败并给出清晰的错误。传入 `--force` 即可覆盖 — Kumo 会先将现有目录移开。
+
+卸载同样保守:只移除 Kumo 记录为自己安装的条目。其他内容保留不动。
+
+<Callout type="info">
+Kumo 更新后重新运行 install 会将技能内容更新到最新版本。在此之前,
+Agent 仍然可以工作 — 只是不会知道新版本中添加的新命令。
+</Callout>
+
+## 技能本身
+
+技能是一个小型 Markdown 包,教会 Agent 调用 `kumo` 完成一切。
+Agent 不需要在提示词中包含任何 Kumo 专属代码 — 技能就是契约。
+
+通过以下命令打开当前 Kumo 自带的技能包:
+
+```bash
+open "$(kumo skills status --json | jq -r '.targets[0].destinationRoot')"
+```
+
+(或浏览上方对应 Agent 的路径。)
+
+## 清理
+
+```bash
+kumo skills uninstall --agent all
+```
+
+移除 Kumo 写入的所有技能。未跟踪的条目 — 例如手动编辑的副本 —
+保留在原位。

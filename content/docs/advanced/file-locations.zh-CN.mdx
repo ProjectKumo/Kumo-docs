@@ -1,0 +1,129 @@
+---
+title: 文件位置
+description: Kumo 在磁盘上存储所有内容的位置,逐个文件说明。
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+Kumo 将所有路径集中在 `KumoPaths` 中,因此 GUI、CLI、测试以及计划中的
+服务模式对所有内容的位置达成一致。
+
+## 根目录
+
+```text
+~/Library/Application Support/Kumo/
+```
+
+从 CLI 打印:
+
+```bash
+kumo config list
+```
+
+## 目录布局
+
+```text
+Kumo/
+  profiles/
+    default.yaml              # 临时的;缺失时重新生成。
+    profiles-metadata.json    # 配置元数据索引。
+    current.txt               # 活跃配置 ID。
+  overrides/
+    overrides.json            # 有序覆写规则列表。
+    files/                    # 每个覆写规则的 YAML / JS / 日志文件。
+  work/
+    config.yaml               # 生成的 Mihomo 运行时配置。
+    core.pid                  # 运行中 Mihomo 核心的 PID 文件。
+  logs/
+    core.log                  # Mihomo stdout + stderr。
+    substore.log              # Sub-Store 后端 stdout + stderr。
+    cli/                      # 每次 kumo 调用的调试日志。
+    app-update-installer.log  # 分离式 DMG 安装器日志。
+  cores/
+    mihomo                    # 托管的 Mihomo 二进制文件(安装后)。
+  substore/
+    status.json               # Sub-Store 后端状态与连接配置。
+    resources/
+      manifest.json
+      node/bin/node
+      backend/sub-store.bundle.js
+    data/                     # Sub-Store 运行时数据。
+    temp/                     # Sub-Store 暂存工作区。
+  updates/
+    downloads/                # 应用更新下载缓存。
+  proxy-geo-cache.json        # 国家查询缓存,30 天 TTL。
+  state.json                  # GUI 与 CLI 共享的状态。
+  preferences.json            # 应用级偏好设置。
+```
+
+## 顶层文件
+
+### `state.json`
+
+存储 GUI 与 CLI 之间共享的运行时状态:
+
+- 核心运行状态与进程 ID。
+- 出站模式(`rule` / `global` / `direct`)。
+- 控制器端点与 mixed 代理端口。
+- 系统代理状态,包括 PAC `mode` 与 `pacScript`。
+- 受控运行时设置(TUN 栈、路由、DNS、路由排除、MTU、ICMP 转发)。
+- 最后一条状态消息。
+
+解码容忍缺失字段,因此 Kumo 更新可以添加新键而不会使旧版 `state.json` 失效。
+
+### `preferences.json`
+
+仅 UI 生命周期偏好设置:
+
+- `launchAtLogin`(与 `SMAppService.mainApp` 保持同步)。
+- `hideMenuBarIcon`。
+- `quitOnLastWindowClose`。
+- `updateChannel`(`stable` / `beta`)。
+- `updateManifestURL`(可选覆盖)。
+
+解码回退到默认值,因此缺失或损坏的文件永远不会阻止启动。
+
+### `work/config.yaml`
+
+Mihomo 实际读取的合并运行时配置。由活跃配置、启用的覆写规则以及
+Kumo 控制的键生成。直接编辑此文件不会产生持久效果 — 每次启动都会
+重新生成。请改用 [覆写规则](/docs/advanced/overrides)。
+
+### `proxy-geo-cache.json`
+
+缓存代理节点国旗解析使用的 `ipwho.is` 查询。30 天 TTL,失败时
+5 分钟冷却。可安全删除;缓存会在后台自动重建。
+
+## 备份
+
+`kumo backup export <path>` 在 `<path>` 处写入一个目录,包含:
+
+```text
+manifest.json
+profiles/
+overrides/
+substore/
+state.json
+```
+
+第一版备份**基于目录**而非 zip,目的是保持透明、易于 diff、便于
+Agent 检查。未来的 UI 可能会将同一 manifest 包装为压缩归档或同步到
+WebDAV,但不会改变导入/导出契约。
+
+使用 `kumo backup import <path>` 恢复。
+
+## 重置
+
+开发期间如需清空本地 Kumo 状态:
+
+```bash
+make reset-local-state
+```
+
+(这是 KumoApp 仓库中的一个 `make` 目标。它会完全删除
+`~/Library/Application Support/Kumo/`。)
+
+<Callout type="info">
+除非意图就是擦除所有内容,否则不要对真实安装运行 `make reset-local-state`。
+副作用是会重新触发首次启动引导面板。
+</Callout>

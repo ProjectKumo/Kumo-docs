@@ -1,0 +1,82 @@
+---
+title: 权限
+description: macOS 何时请求提升权限,以及 Kumo 刻意不做的事。
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+Kumo 的首个版本有意避免特权 Helper。macOS 仅在少数严格限定的情况下
+请求**管理员授权**,除此之外不做任何其他操作。
+
+## Kumo 不做什么
+
+- **不**注册 NetworkExtension。
+- **不**注册 VPN 配置。
+- **不**弹出**允许 VPN 配置**提示。
+
+系统代理使用 `networksetup`,与命令行中可用的工具相同。TUN 使用标准
+macOS `utun*` 设备。
+
+## Kumo 何时请求管理员权限
+
+| 操作                                              | macOS 弹出的提示                              |
+| ------------------------------------------------- | --------------------------------------------- |
+| 安装或移除 `/usr/local/bin/kumo` 符号链接         | `/usr/local/bin` 需要提升权限。               |
+| 安装或修复 Kumo Helper(计划中)                    | LaunchDaemon 安装。                           |
+| 安装或移除 Kumo Helper LaunchDaemon               | 同上。                                        |
+
+每个提示都是一次性的 — Kumo 每次操作运行一次
+`osascript ... with administrator privileges`。
+批准提示不会授予 Kumo 持续的 root 权限。
+
+## 权限
+
+应用包携带以下权限:
+
+- **App Sandbox** — v1 中**禁用**。生成 Mihomo 和 Sub-Store 子进程以及
+  调用 `networksetup` 与沙箱对 `Process` 和 shell-out 的限制不兼容。
+  App Sandbox 加 Helper bundle 分离在路线图上。
+- **Network client** — 已启用。Mihomo 控制器和获取订阅 URL 所需。
+- **Network server** — 已启用。PAC HTTP 监听器和 Mihomo 的
+  external-controller 端点所需。
+
+`Info.plist` 在 `NSAppleEventsUsageDescription` 和
+`NSSystemAdministrationUsageDescription` 下声明了使用字符串,用于极少数
+弹出授权提示的时刻。
+
+## 服务模式(计划中)
+
+当 Kumo Helper 服务模式发布后,macOS 会在安装/卸载时请求管理员授权,
+与 Sparkle 和 Clash Verge Rev 相同。Helper 将拥有特权操作的所有权,如
+TUN 控制、受保护的系统代理变更以及公证后的自动更新。
+
+在此之前:
+
+- TUN 启用请求会失败并显示可见的服务模式错误,而非让 UI 停留在误导性的
+  "开启" 状态。
+- 系统代理变更仍然可以在没有 Helper 的情况下工作,因为 Kumo 可以自己运行
+  `networksetup`。
+
+## 权限 FAQ
+
+### 为什么 Kumo 没有沙箱?
+
+v1 发布时禁用了沙箱,因为生成 Mihomo 和 Sub-Store 子进程与沙箱对
+`Process` 和 `networksetup` 的限制不兼容。App Sandbox 加 Helper bundle
+分离在路线图上。
+
+### 为什么 Kumo 不请求"允许 VPN 配置"?
+
+该提示属于 NetworkExtension。Kumo 直接使用系统代理和 TUN,因此不会
+触发该提示。
+
+### 什么以 root 运行?
+
+v1 中 Kumo 没有任何内容以 root 运行。唯一的
+`with administrator privileges` shell 调用是 CLI 符号链接安装/卸载期间的
+短命 `ln` / `rm` 调用。
+
+<Callout type="info">
+如果其他东西请求 root,请核实实际触发者。Kumo 的提示始终来自
+**Kumo** 应用(在授权对话框中可见)。
+</Callout>

@@ -1,0 +1,93 @@
+---
+title: 命令行
+description: 安装 kumo CLI,在任何目录运行,交给脚本和 Agent 使用。
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+`kumo` 命令行工具将 GUI 使用的同一套 `KumoCoreKit` facade 暴露为一个小型 ArgumentParser 二进制文件。GUI 能做的,CLI 都能做,反之亦然,两者可互换使用。
+
+## 安装 CLI
+
+两种方式将 `kumo` 加入 `PATH`。
+
+### 通过应用安装(推荐)
+
+首次启动的引导面板会询问是否安装 CLI。如果当时跳过了,可前往
+**设置 → 通用 → 安装命令行工具** 重新运行。
+
+Kumo 会在后台创建一个符号链接:
+
+```bash
+/usr/local/bin/kumo  →  /Applications/Kumo.app/Contents/Helpers/kumo
+```
+
+这需要管理员授权,因为 `/usr/local/bin` 归 root 所有。会弹出一个 `osascript` 提示;此后不再需要额外提权。
+
+### 手动安装
+
+```bash
+sudo ln -sf "/Applications/Kumo.app/Contents/Helpers/kumo" /usr/local/bin/kumo
+```
+
+以后如需移除 CLI:
+
+```bash
+sudo rm /usr/local/bin/kumo
+```
+
+<Callout type="info">
+Kumo 只删除自己创建的符号链接。如果路径不匹配,不会触碰通过 Homebrew 或手动安装的 `kumo`。
+</Callout>
+
+## 验证安装
+
+```bash
+kumo --version
+kumo status --json
+```
+
+第一条命令打印版本号。第二条与正在运行的 GUI 通信(或按需启动控制器)并以 JSON 返回当前状态。
+
+## 文件位置
+
+| 路径                                                            | 说明                            |
+| --------------------------------------------------------------- | ------------------------------- |
+| `/usr/local/bin/kumo`                                           | 符号链接。                      |
+| `/Applications/Kumo.app/Contents/Helpers/kumo`                  | 应用内的真实 CLI 二进制文件。   |
+| `~/Library/Application Support/Kumo/`                           | 配置、状态、日志、覆写规则。    |
+| `~/Library/Application Support/Kumo/logs/cli/`                  | 每次调用的 CLI 调试日志。       |
+
+完整地图见 [文件位置](/docs/advanced/file-locations)。
+
+## 命令补全
+
+为当前 shell 打印并加载补全脚本:
+
+```bash
+kumo completion zsh   > ~/.zsh/completions/_kumo   # zsh
+kumo completion bash  > ~/.bash_completion.d/kumo  # bash
+kumo completion fish  > ~/.config/fish/completions/kumo.fish  # fish
+```
+
+然后确保该目录在 shell 的补全路径中。
+
+## 快速上手
+
+在任何目录尝试以下命令:
+
+```bash
+kumo status --json                              # 当前状态
+kumo start                                      # 启动核心
+kumo mode global                                # 切换出站模式
+kumo proxies --json | jq '.data[0].name'        # 提取第一个组
+kumo doctor --json                              # 一次性健康报告
+```
+
+修改系统状态的命令接受 `--dry-run` 以预览操作而不执行。输出类命令接受 `--json` 以从人类可读文本切换到稳定的 JSON 信封。
+
+## 下一步
+
+- [CLI 参考](/docs/advanced/cli-reference) — 每条命令,按用途分组。
+- [自动化](/docs/advanced/automation) — 将 CLI 接入快捷指令、Spotlight 或 shell 钩子。
+- [Agent 技能](/docs/advanced/agent-skills) — 让编码 Agent 安全、结构化地访问 CLI。
