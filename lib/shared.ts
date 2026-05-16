@@ -3,6 +3,9 @@ export const docsRoute = '/docs';
 export const docsImageRoute = '/og/docs';
 export const docsContentRoute = '/llms.mdx/docs';
 
+// Public community channel (release announcements + chat).
+export const telegramUrl = 'https://t.me/projectkumo';
+
 // Source-of-truth metadata for KumoApp.
 export const gitConfig = {
   user: 'ProjectKumo',
