@@ -1,7 +1,8 @@
 import { RootProvider } from 'fumadocs-ui/provider/next';
 import type { Metadata } from 'next';
-import './global.css';
+import '../global.css';
 import { Inter } from 'next/font/google';
+import { i18nUI } from '@/lib/layout.shared';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -40,11 +41,15 @@ export const metadata: Metadata = {
   },
 };
 
-export default function Layout({ children }: LayoutProps<'/'>) {
+export default async function Layout({
+  params,
+  children,
+}: LayoutProps<'/[lang]'>) {
+  const { lang } = await params;
   return (
-    <html lang="en" className={inter.className} suppressHydrationWarning>
+    <html lang={lang} className={inter.className} suppressHydrationWarning>
       <body className="flex flex-col min-h-screen">
-        <RootProvider>{children}</RootProvider>
+        <RootProvider i18n={i18nUI.provider(lang)}>{children}</RootProvider>
       </body>
     </html>
   );
