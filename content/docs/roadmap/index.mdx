@@ -1,0 +1,29 @@
+---
+title: Roadmap
+description: Where Kumo is going next — staged future work, the service-mode design, and Sparkle feature-parity tracking.
+---
+
+import { Cards, Card } from 'fumadocs-ui/components/card';
+import { Callout } from 'fumadocs-ui/components/callout';
+
+This section tracks Kumo's staged future work. It is intentionally short and
+high-level: the goal is to make it obvious what direction the project is
+moving in, what the design constraints are, and where current capability sits
+relative to a known reference implementation.
+
+If you want to influence the roadmap, open an issue or discussion on
+[KumoApp](https://github.com/ProjectKumo/KumoApp) — these documents capture
+intent, not contracts.
+
+## What's here
+
+<Cards>
+  <Card title="Service mode" href="/docs/roadmap/service-mode" description="Why service mode exists, the proposed API shape, request signing, migration steps, and the status of locally hosted subsystems." />
+  <Card title="Sparkle feature parity" href="/docs/roadmap/sparkle-parity" description="A capability matrix comparing Kumo to its reference implementation across core, runtime, controller, system proxy, Sub-Store, and UI." />
+</Cards>
+
+<Callout type="info">
+The roadmap is a planning document, not a release schedule. Items marked
+`planned` or `deferred` are not commitments. Items marked `implemented` are
+already in shipping builds; everything else is in motion.
+</Callout>

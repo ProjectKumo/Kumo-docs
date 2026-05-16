@@ -1,0 +1,11 @@
+{
+  "title": "Roadmap",
+  "description": "Where Kumo is going — staged future work, service-mode design, and Sparkle feature-parity tracking.",
+  "icon": "Map",
+  "root": true,
+  "pages": [
+    "index",
+    "service-mode",
+    "sparkle-parity"
+  ]
+}

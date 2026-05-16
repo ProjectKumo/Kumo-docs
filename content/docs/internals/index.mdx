@@ -1,0 +1,72 @@
+---
+title: Internals
+description: Source-of-truth technical reference for engineers and integrators working on or around the KumoApp source tree.
+---
+
+import { Cards, Card } from 'fumadocs-ui/components/card';
+import { Callout } from 'fumadocs-ui/components/callout';
+
+These are the same technical documents that live inside the
+[KumoApp](https://github.com/ProjectKumo/KumoApp) source tree under
+`docs/`. They describe the product scope, the shared `KumoCoreKit` control
+layer, the macOS SwiftUI interface, the `kumo` CLI, operations concerns
+(permissions, persistence, releases, updates), quality expectations, and the
+small set of implementation standards that survive across UI and runtime
+changes.
+
+If you are wiring an agent into Kumo, packaging your own build, or hardening
+a fork, start here. If you are just trying to use Kumo or pick a profile, the
+[For Everyone](/docs/for-everyone) and [Power User](/docs/power-user) tracks
+are friendlier entry points.
+
+## Product
+
+<Cards>
+  <Card title="Information architecture" href="/docs/internals/information-architecture" description="Daily / Inspect / Configure split, primary navigation, and empty/error-state expectations." />
+</Cards>
+
+## Core (KumoCoreKit)
+
+<Cards>
+  <Card title="Control layer" href="/docs/internals/control-layer" description="KumoController facade, ownership boundaries, and the shared rules every front-end follows." />
+  <Card title="Mihomo runtime and controller" href="/docs/internals/mihomo-runtime-controller" description="Process supervision, controller client, TUN runtime settings, and transport details." />
+  <Card title="Profiles and runtime configuration" href="/docs/internals/profiles-runtime-configuration" description="Profile sources, runtime config generation, override merging, and Kumo-owned keys." />
+</Cards>
+
+## Interfaces
+
+<Cards>
+  <Card title="macOS SwiftUI interface" href="/docs/internals/macos-swiftui-interface" description="Scenes, navigation, toolbar, status item, App Intents, and UI constraints." />
+  <Card title="CLI and agent control" href="/docs/internals/cli-agent-control" description="kumo command design, JSON envelopes, logging, agent skills, and service-mode behavior." />
+</Cards>
+
+## Operations
+
+<Cards>
+  <Card title="System integration and permissions" href="/docs/internals/system-integration-permissions" description="App bundle, entitlements, system proxy, Spotlight, Services, App Intents, and permission scope." />
+  <Card title="Persistence and logging" href="/docs/internals/persistence-logging" description="Application Support layout, state files, preferences, backups, and log channels." />
+  <Card title="Release management" href="/docs/internals/release-management" description="GitHub Releases feed, DMG artifacts, latest.yml manifest, and release-build helpers." />
+  <Card title="App updates" href="/docs/internals/app-updates" description="Five-minute polling, local notifications, checksum verification, and installer handoff." />
+</Cards>
+
+## Quality
+
+<Cards>
+  <Card title="Testing and quality" href="/docs/internals/testing-quality" description="Current test surface, verification commands, coverage gaps, and the manual QA checklist." />
+</Cards>
+
+## Standards
+
+<Cards>
+  <Card title="Page titles and window chrome" href="/docs/internals/page-title-chrome" description="Where destination titles live, and why pages do not repeat them inline." />
+  <Card title="Menu bar status item" href="/docs/internals/menu-bar-status-item" description="AppKit NSStatusItem structure, menu requirements, and visual rules." />
+  <Card title="Proxies page scroll container" href="/docs/internals/proxies-page-scroll-container" description="Why the Proxies card list owns a single full-page ScrollView." />
+</Cards>
+
+<Callout type="info">
+These documents are kept faithful to the upstream `KumoApp/docs/` source. If
+behavior described here disagrees with the code, the code is the bug — open
+an issue or PR against
+[KumoApp](https://github.com/ProjectKumo/KumoApp) so both can be fixed
+together.
+</Callout>

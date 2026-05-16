@@ -4,7 +4,7 @@ description: Kumo is a calm, native proxy app for Mac. Pick the path that fits y
 ---
 
 import { Cards, Card } from 'fumadocs-ui/components/card';
-import { BookOpenCheck, Wrench, Hammer } from 'lucide-react';
+import { BookOpenCheck, Wrench, Hammer, Cpu, Map } from 'lucide-react';
 
 Kumo is a native macOS app that routes traffic through the
 [Mihomo](https://github.com/MetaCubeX/mihomo) proxy core. You bring your
@@ -12,8 +12,10 @@ own subscription; Kumo gives you a polished SwiftUI app, a friendly menu
 bar item, and — if you want — a command-line tool and automation hooks
 that match the GUI feature-for-feature.
 
-These docs are split into three tracks. Pick the one that fits today.
-You can always switch tracks later.
+These docs are split into five tracks. The first three are written for
+people who use Kumo; the last two are technical reference straight from
+the KumoApp source tree, useful if you want to read the code or plan
+ahead.
 
 <Cards>
   <Card
@@ -34,11 +36,23 @@ You can always switch tracks later.
     href="/docs/contributing"
     description="Build Kumo from source, learn the architecture, and ship a fix or feature back upstream."
   />
+  <Card
+    icon={<Cpu />}
+    title="Internals"
+    href="/docs/internals"
+    description="Source-of-truth technical reference: KumoCoreKit, runtime, system integration, persistence, and standards."
+  />
+  <Card
+    icon={<Map />}
+    title="Roadmap"
+    href="/docs/roadmap"
+    description="Where Kumo is going — staged future work, service-mode design, and Sparkle feature-parity tracking."
+  />
 </Cards>
 
 ## Quick links
 
-- **Download** — [the latest release](https://github.com/ProjectKumo/KumoApp/releases/latest).
+- **Download** — [pick your platform](/download) or browse [GitHub Releases](https://github.com/ProjectKumo/KumoApp/releases).
 - **Source** — [github.com/ProjectKumo/KumoApp](https://github.com/ProjectKumo/KumoApp).
 - **Report a bug** — [open an issue](https://github.com/ProjectKumo/KumoApp/issues).
 

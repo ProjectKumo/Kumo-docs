@@ -1,0 +1,29 @@
+{
+  "title": "Internals",
+  "description": "Source-of-truth technical reference for engineers and integrators — the same docs that ship with the KumoApp source tree.",
+  "icon": "Cpu",
+  "root": true,
+  "pages": [
+    "index",
+    "---Product---",
+    "information-architecture",
+    "---Core (KumoCoreKit)---",
+    "control-layer",
+    "mihomo-runtime-controller",
+    "profiles-runtime-configuration",
+    "---Interfaces---",
+    "macos-swiftui-interface",
+    "cli-agent-control",
+    "---Operations---",
+    "system-integration-permissions",
+    "persistence-logging",
+    "release-management",
+    "app-updates",
+    "---Quality---",
+    "testing-quality",
+    "---Standards---",
+    "page-title-chrome",
+    "menu-bar-status-item",
+    "proxies-page-scroll-container"
+  ]
+}
