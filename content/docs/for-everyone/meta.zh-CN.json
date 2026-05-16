@@ -1,0 +1,17 @@
+{
+  "title": "面向所有人",
+  "description": "用平实的语言带你跑起来 Kumo。",
+  "icon": "Sparkles",
+  "root": true,
+  "pages": [
+    "index",
+    "install",
+    "first-connection",
+    "everyday",
+    "switching-modes",
+    "sub-store",
+    "updating",
+    "troubleshooting",
+    "faq"
+  ]
+}

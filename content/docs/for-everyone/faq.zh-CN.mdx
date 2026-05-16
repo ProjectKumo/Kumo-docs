@@ -1,0 +1,65 @@
+---
+title: 常见问题
+description: 大家试用 Kumo 之前最常问的问题,以及简短的答案。
+---
+
+## Kumo 是 VPN 吗?
+
+不是。Kumo 是一款**代理客户端**,用的是你已有的订阅。它在本地跑
+Mihomo 代理引擎,然后让 macOS 把流量送进去。Kumo 自己不会连接到任何
+远程 VPN 服务器。
+
+## 我需要订阅吗?
+
+需要。Kumo 只是*客户端*。你需要自己有一份来自代理服务商的订阅 URL。
+
+## 它能在哪些 Mac 上运行?
+
+macOS 15 Sequoia 或更高,搭载 Apple Silicon(M1 / M2 / M3 / M4)。
+第一个版本不支持 Intel Mac。
+
+## 它是免费的吗?是开源的吗?
+
+是,也是开源的。Kumo 遵循 GNU Affero General Public License v3.0 only
+(AGPL-3.0-only)。源码在
+[github.com/ProjectKumo/KumoApp](https://github.com/ProjectKumo/KumoApp)。
+
+## Kumo 会弹出 "允许 VPN 配置" 吗?
+
+不会。Kumo **不会**安装 NetworkExtension,也**不会**注册 VPN 配置。
+首次启动或任何时候,都不应该出现 "允许 VPN 配置" 的系统提示。
+
+## Kumo 能和别的代理 app 一起用吗?
+
+你可以装着别的代理 app,但同一时刻只能有一个在管理 macOS 的系统代理。
+两个 app 抢同一个设置时,会表现成 Kumo 的系统代理开关一直自己跳回关闭。
+
+## Kumo 能无图形界面跑吗?
+
+可以 —— GUI 干的大部分事情都通过 `kumo` 命令行工具暴露出来,
+你可以用脚本控制 Kumo。菜单栏图标和「快捷指令」集成仍然需要 GUI 在跑。
+见 [高阶用户 → 命令行](/docs/power-user/command-line)。
+
+## 怎么切换订阅?
+
+打开 **配置**,右键你想用的那份配置,选 **设为活跃**。
+任意时刻只能有一份配置是活跃的。如果你想把好几份混着用,看看
+[Sub-Store](/docs/for-everyone/sub-store)。
+
+## Kumo 把我的设置和订阅放在哪里?
+
+`~/Library/Application Support/Kumo/` 下面。
+通常你完全不需要去翻这个目录。如果你确实想看,
+见高阶用户单元里的 [文件位置](/docs/power-user/file-locations)。
+
+## 怎么报告 bug?
+
+到
+[github.com/ProjectKumo/KumoApp/issues](https://github.com/ProjectKumo/KumoApp/issues)
+开一个 issue。[排查问题](/docs/for-everyone/troubleshooting) 一页里
+列了你应该附上哪些信息。
+
+## 我能帮忙建设 Kumo 吗?
+
+可以。看 [参与贡献](/docs/contributing) 单元。它讲了从源码构建、
+代码大致的结构,以及怎么提一个能被合入的 PR。
