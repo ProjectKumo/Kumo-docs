@@ -19,7 +19,10 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function DownloadPage() {
+export default async function DownloadPage({
+  params,
+}: PageProps<'/[lang]/download'>) {
+  const { lang } = await params;
   const release = await fetchLatestRelease();
 
   return (
@@ -44,7 +47,10 @@ export default async function DownloadPage() {
         <footer className="text-sm text-fd-muted-foreground border-t border-fd-border pt-6 flex flex-col gap-2">
           <p>
             Need installation help?{' '}
-            <Link href="/docs/for-everyone/install" className="text-fd-primary hover:underline">
+            <Link
+              href={`/${lang}/docs/for-everyone/install`}
+              className="text-fd-primary hover:underline"
+            >
               Read the install guide
             </Link>
             .
@@ -53,7 +59,7 @@ export default async function DownloadPage() {
             Prefer the command line? Power users can install via Homebrew or
             build from source — see{' '}
             <Link
-              href="/docs/power-user/command-line"
+              href={`/${lang}/docs/power-user/command-line`}
               className="text-fd-primary hover:underline"
             >
               Command line

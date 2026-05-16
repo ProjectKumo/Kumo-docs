@@ -1,6 +1,8 @@
 import type { BaseLayoutProps } from 'fumadocs-ui/layouts/shared';
+import { defineI18nUI } from 'fumadocs-ui/i18n';
 import Image from 'next/image';
 import type { SVGProps } from 'react';
+import { i18n } from './i18n';
 import { appName, gitConfig, telegramUrl } from './shared';
 
 /**
@@ -25,8 +27,40 @@ function TelegramIcon(props: SVGProps<SVGSVGElement>) {
   );
 }
 
-export function baseOptions(): BaseLayoutProps {
+/**
+ * Translation strings for built-in Fumadocs UI. The `provider` returned here
+ * is wired into <RootProvider i18n={...}> in app/[lang]/layout.tsx so the
+ * sidebar, search modal, "previous/next", language toggle, etc. all render
+ * in the visitor's locale.
+ *
+ * Only the zh-CN entry needs translations — `en` keeps Fumadocs' defaults.
+ */
+export const i18nUI = defineI18nUI(i18n, {
+  translations: {
+    en: {
+      displayName: 'English',
+    },
+    'zh-CN': {
+      displayName: '简体中文',
+      toc: '本页目录',
+      search: '搜索文档',
+      lastUpdate: '最后更新于',
+      searchNoResult: '没有结果',
+      previousPage: '上一页',
+      nextPage: '下一页',
+      chooseLanguage: '选择语言',
+    },
+  },
+});
+
+/**
+ * Shared layout options for both the home and docs layouts. Lang-aware so
+ * the brand title link routes within the visitor's locale, and the docs
+ * layout can wire up the built-in `<LanguageToggle />` via `i18n`.
+ */
+export function baseOptions(locale: string): BaseLayoutProps {
   return {
+    i18n,
     nav: {
       title: (
         <span className="flex items-center gap-2 font-semibold">
@@ -40,6 +74,9 @@ export function baseOptions(): BaseLayoutProps {
           {appName}
         </span>
       ),
+      // Clicking the brand mark returns the visitor to the locale-prefixed
+      // home page rather than dropping them on the un-prefixed `/`.
+      url: `/${locale}`,
     },
     githubUrl: `https://github.com/${gitConfig.user}/${gitConfig.repo}`,
     links: [

@@ -3,11 +3,15 @@ import { DocsLayout } from 'fumadocs-ui/layouts/docs';
 import { baseOptions } from '@/lib/layout.shared';
 import { getSection } from '@/lib/section';
 
-export default function Layout({ children }: LayoutProps<'/docs'>) {
+export default async function Layout({
+  params,
+  children,
+}: LayoutProps<'/[lang]/docs'>) {
+  const { lang } = await params;
   return (
     <DocsLayout
-      tree={source.getPageTree()}
-      {...baseOptions()}
+      tree={source.getPageTree(lang)}
+      {...baseOptions(lang)}
       tabs={{
         transform(option, node) {
           const meta = source.getNodeMeta(node);

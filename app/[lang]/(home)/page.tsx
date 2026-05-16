@@ -1,6 +1,9 @@
 import Link from 'next/link';
 
-export default function HomePage() {
+export default async function HomePage({
+  params,
+}: PageProps<'/[lang]'>) {
+  const { lang } = await params;
   return (
     <div className="flex flex-col justify-center text-center flex-1 px-6 py-16 gap-6">
       <p className="text-fd-muted-foreground uppercase tracking-widest text-xs">
@@ -17,13 +20,13 @@ export default function HomePage() {
       </p>
       <div className="flex flex-wrap gap-3 justify-center">
         <Link
-          href="/download"
+          href={`/${lang}/download`}
           className="rounded-full bg-fd-primary text-fd-primary-foreground px-5 py-2.5 text-sm font-medium hover:opacity-90"
         >
           Install Kumo
         </Link>
         <Link
-          href="/docs"
+          href={`/${lang}/docs`}
           className="rounded-full border border-fd-border px-5 py-2.5 text-sm font-medium hover:bg-fd-accent"
         >
           Read the docs
