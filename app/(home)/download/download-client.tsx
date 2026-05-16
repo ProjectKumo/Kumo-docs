@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { Apple, Monitor, Terminal, type LucideIcon } from 'lucide-react';
 import type { LatestRelease, Platform } from '@/lib/releases';
 import {
   formatSize,
@@ -103,10 +104,14 @@ async function detectPlatform(): Promise<Platform | null> {
   return 'linux-x64';
 }
 
-const OS_ICON: Record<'macos' | 'windows' | 'linux', string> = {
-  macos: '',
-  windows: '⊞',
-  linux: '🐧',
+const OS_ICON: Record<'macos' | 'windows' | 'linux', LucideIcon> = {
+  macos: Apple,
+  // Lucide has no Windows brand mark; a generic monitor reads as "desktop OS"
+  // without leaning on emoji or a tortured Unicode square.
+  windows: Monitor,
+  // Penguin emoji is the canonical Linux mascot but reads as decoration; a
+  // terminal glyph is the universally-recognised shorthand on download pages.
+  linux: Terminal,
 };
 
 const OS_LABEL: Record<'macos' | 'windows' | 'linux', string> = {
@@ -170,6 +175,8 @@ export function DownloadClient({ release, releasesUrl }: DownloadClientProps) {
           {sortPlatforms(allPlatforms).map((platform) => {
             const asset = release?.byPlatform[platform];
             const isCurrent = detected === platform;
+            const os = platformOS(platform);
+            const OsIcon = OS_ICON[os];
             return (
               <li
                 key={platform}
@@ -180,9 +187,13 @@ export function DownloadClient({ release, releasesUrl }: DownloadClientProps) {
                 }`}
               >
                 <div className="flex items-center justify-between gap-2 mb-2">
-                  <span className="text-xs uppercase tracking-wider text-fd-muted-foreground">
-                    <span aria-hidden="true">{OS_ICON[platformOS(platform)]}</span>{' '}
-                    {OS_LABEL[platformOS(platform)]}
+                  <span className="inline-flex items-center gap-1.5 text-xs uppercase tracking-wider text-fd-muted-foreground">
+                    <OsIcon
+                      aria-hidden="true"
+                      className="size-3.5 shrink-0"
+                      strokeWidth={2}
+                    />
+                    {OS_LABEL[os]}
                   </span>
                   {isCurrent ? (
                     <span className="text-[10px] font-medium uppercase tracking-wider text-fd-primary">
