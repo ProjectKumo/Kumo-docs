@@ -1,6 +1,8 @@
 {
   "title": "Contributing",
   "description": "Help build Kumo. Set up your machine, find your way around the code, and ship a good first patch.",
+  "icon": "GitPullRequestArrow",
+  "root": true,
   "pages": [
     "index",
     "---Get Set Up---",

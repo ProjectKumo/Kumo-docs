@@ -1,6 +1,8 @@
 {
   "title": "For Everyone",
   "description": "Plain-language guides for getting Kumo running.",
+  "icon": "Sparkles",
+  "root": true,
   "pages": [
     "index",
     "install",

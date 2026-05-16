@@ -1,6 +1,8 @@
 {
   "title": "Power User",
   "description": "Drive Kumo from the command line, author profiles, and wire it into the rest of macOS.",
+  "icon": "Terminal",
+  "root": true,
   "pages": [
     "index",
     "command-line",
