@@ -6,7 +6,7 @@ description: Every kumo subcommand, grouped by purpose, with examples and JSON o
 import { Callout } from 'fumadocs-ui/components/callout';
 
 This page is the canonical reference for the `kumo` binary. Every
-command accepts `--help` to get inline reference, and `--json` to
+command accepts `--help` for inline reference, and `--json` to
 switch from human text to the stable JSON envelope.
 
 The envelope is always:
@@ -184,7 +184,7 @@ kumo substore stop
 kumo substore restart
 ```
 
-See [Sub-Store (advanced)](/docs/advanced/sub-store-hosting) for the
+See [Sub-Store hosting](/docs/advanced/sub-store-hosting) for the
 backend choices.
 
 ## Core
@@ -209,7 +209,7 @@ support.
 
 Install is **non-destructive** by default: if the destination directory
 exists and was not recorded as installed by Kumo, the command fails
-until you pass `--force`.
+until `--force` is passed.
 
 ## Logs
 

@@ -5,14 +5,14 @@ description: Shortcuts, App Intents, Spotlight, Services — wire Kumo into the 
 
 import { Callout } from 'fumadocs-ui/components/callout';
 
-Kumo exposes itself to macOS automation in four places:
+Kumo exposes itself to macOS automation in four ways:
 
 1. **App Intents** for Shortcuts.app and Siri.
 2. **Spotlight** for typing actions directly.
 3. **Services** for the right-click menu.
 4. The **`kumo` CLI** for shell scripts and `osascript`.
 
-Pick whichever ergonomics fits the moment.
+Pick whichever fits the moment.
 
 ## App Intents (Shortcuts)
 
@@ -42,14 +42,14 @@ The **Set Mode** intent takes an enum:
 
 ## Spotlight
 
-Type into Spotlight (default `⌘Space`) and you can run these actions:
+Type into Spotlight (default `⌘Space`) and run these actions:
 
 - "Start Kumo"
 - "Stop Kumo"
 - "Toggle Kumo system proxy"
 - "Refresh Kumo profile"
 
-Spotlight uses the same App Intents under the hood, so anything you see
+Spotlight uses the same App Intents under the hood, so anything visible
 in Shortcuts is also typable.
 
 ## Services
@@ -87,14 +87,14 @@ intents need the GUI to be running, because they go through the
 App Intents framework.
 </Callout>
 
-## Idea jar
+## Examples
 
-Things people have wired Kumo into:
+Ways the community has wired Kumo into other tools:
 
 - **Focus filters** — turn system proxy off during the "Personal" Focus.
 - **Login items** — start Kumo and refresh the profile.
 - **Hammerspoon** — bind `⌃⌥⌘P` to "toggle system proxy".
 - **Stream Deck** — one button per mode.
 
-If you build something nice, drop it in
+Share setups in
 [GitHub Discussions](https://github.com/ProjectKumo/KumoApp/discussions).

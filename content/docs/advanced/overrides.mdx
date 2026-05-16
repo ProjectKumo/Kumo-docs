@@ -1,6 +1,6 @@
 ---
 title: Overrides
-description: Tweak a subscription without forking it. Merge operators, examples, and the gotchas.
+description: Tweak a subscription without forking it. Merge operators, examples, and caveats.
 ---
 
 import { Callout } from 'fumadocs-ui/components/callout';
@@ -19,8 +19,8 @@ order.
 
 ## Merge order
 
-Each time Kumo starts the core (or you change the active profile,
-override list, or order):
+Each time Kumo starts the core (or the active profile, override list,
+or order changes):
 
 1. Start with the active profile's YAML.
 2. Apply enabled overrides in their saved order.
@@ -32,10 +32,10 @@ If two overrides touch the same key, the **later** one wins.
 
 ## Merge operators
 
-Kumo understands two operator families. You can mix them in a single
+Kumo understands two operator families. Both can be mixed in a single
 override file.
 
-### Sparkle-style prefix / suffix on a key
+### Sparkle-style prefix / suffix / replace
 
 ```yaml
 +rules:        # prepend
@@ -48,7 +48,7 @@ key!:          # replace (overwrite the whole key)
 mode!: rule
 ```
 
-### Clash Verge Rev-style prepend / append / delete keys
+### Clash Verge Rev-style prepend / append / delete
 
 ```yaml
 prepend-rules:
@@ -61,12 +61,11 @@ delete-rules:
   - "MATCH,Proxy"           # delete the literal MATCH rule
 ```
 
-Pick whichever style reads better. The two operator families compose;
-Kumo applies prefixes, suffixes, replacements, prepends, appends, and
-deletes in a defined order so the result is the same regardless of
-which spelling you pick.
+Both styles compose. Kumo applies prefixes, suffixes, replacements,
+prepends, appends, and deletes in a defined order so the result is the
+same regardless of which spelling is used.
 
-## A worked example
+## Worked example
 
 Given a profile that includes:
 
@@ -101,9 +100,9 @@ rules:
 
 ## JavaScript overrides
 
-You can also drop a `.js` file. Kumo runs it in a sandboxed JS engine
-and expects an exported `main(config)` function that returns a mutated
-config. Use this when YAML cannot express the change you want.
+Drop a `.js` file. Kumo runs it in a sandboxed JS engine and expects
+an exported `main(config)` function that returns a mutated config. Use
+this when YAML cannot express the change.
 
 ```javascript
 // overrides/files/normalize-groups.js
@@ -136,16 +135,16 @@ overrides/
     ...
 ```
 
-You can edit `overrides.json` and the files in `files/` by hand. Kumo
+`overrides.json` and the files in `files/` can be edited by hand. Kumo
 re-reads them on the next core reload.
 
-## Things that bite people
+## Common pitfalls
 
 - **`mode!: rule` does not change the *current* mode.** It sets the
-  profile's `mode` key on disk. If you have already switched mode at
+  profile's `mode` key on disk. If the mode was already switched at
   runtime, runtime wins.
 - **Empty `delete-rules`** in YAML evaluates to `null`, not an empty
-  list. Use `delete-rules: []` if you want to explicitly disable it.
+  list. Use `delete-rules: []` to explicitly disable it.
 - **Override order matters.** Disabling an override and re-enabling it
   drops it at the end of the list. Drag it back where it belongs.
 
