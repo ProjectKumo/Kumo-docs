@@ -1,7 +1,7 @@
 {
   "pages": [
-    "for-everyone",
-    "power-user",
+    "getting-started",
+    "advanced",
     "contributing",
     "internals",
     "roadmap"

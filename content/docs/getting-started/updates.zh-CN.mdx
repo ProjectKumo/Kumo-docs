@@ -1,0 +1,56 @@
+---
+title: 更新
+description: Kumo 如何检查并安装新版本,以及自动更新失败时怎么办。
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+Kumo 内置了一个更新检查器。通常你什么都不用做 —— 有新版本时,
+Kumo 会推一条通知,一键就能装上。
+
+## 它是怎么工作的(30 秒讲完)
+
+- Kumo 每隔五分钟问一次 GitHub Releases:"有更新版本吗?"
+- 如果有,你会收到一条 macOS 通知,带三个动作:
+  - **立即安装** —— 在后台下载新版本。
+  - **稍后提醒我** —— 几个小时后再试。
+  - **立即重启** —— 下载完成后才出现。
+- Kumo 校验下载的文件没问题之后,运行一个极小的安装器,
+  替换 `Kumo.app` 并重新启动。
+
+你也可以手动检查:打开 **设置 → 更新**,点 **检查更新**。
+
+## 稳定版 vs 测试版通道
+
+默认 Kumo 跟的是**稳定**通道 —— 只有正式发布的版本。
+如果你想帮忙测下个版本,在 **设置 → 更新** 里切到 **测试** 通道。
+
+任何时候都能切回稳定。即便你从测试版回到稍早一些的稳定版,
+Kumo 也会保留你的数据。
+
+## 自动更新失败怎么办
+
+最常见的原因:Kumo 没有装在 `/Applications`。有些用户会把它放在
+`~/Applications`、Setapp 的目录、或者外置硬盘里。这些情况下 macOS
+会保护周围的文件夹不被写入,自动安装器就会报错。
+
+修复方法:
+
+1. 退出 Kumo。
+2. 把 `Kumo.app` 移到 `/Applications`(系统的 `/Applications`,
+   不是 `~/Applications`)。
+3. 重新启动,再跑一次更新。
+
+如果还不行,你随时可以从
+[release 页](https://github.com/ProjectKumo/KumoApp/releases/latest)
+手动下载 DMG,直接覆盖安装 —— 你的设置和订阅都会保留下来。
+
+<Callout type="info">
+Kumo 不会未经你同意就装上更新。检查是自动的,安装不是。
+</Callout>
+
+## 下一步
+
+- 看看变更记录:[GitHub 上的 release notes](https://github.com/ProjectKumo/KumoApp/releases)。
+- 好奇内部机制?见
+  [自动更新(深入)](/docs/advanced/auto-updates)(进阶单元)。

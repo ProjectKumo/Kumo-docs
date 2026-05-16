@@ -1,0 +1,82 @@
+---
+title: Outbound modes
+description: Three outbound modes, what each one does, and when to pick which.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+Kumo (through Mihomo) has three **outbound modes**. The mode answers
+the question "when an app asks for the network, which proxy — if any —
+does the traffic go to?".
+
+You can switch modes at any time:
+
+- In the GUI: the **Mode** picker on the Overview screen.
+- In the menu bar: under **Mode**.
+- Keyboard: `⌘1` (Rule), `⌘2` (Global), `⌘3` (Direct).
+
+## Rule mode (default)
+
+**Use this most of the time.**
+
+In Rule mode, Mihomo looks at every connection and decides based on the
+rule list in your profile:
+
+- Connections that match **proxy rules** go through the chosen group.
+- Connections that match **direct rules** (often your local network,
+  Apple services, China-mainland traffic for some subscriptions) go
+  direct.
+- Anything else falls through to the **default** rule, which usually
+  routes through your main proxy group.
+
+This is the mode subscription providers design their rule lists for.
+For day-to-day use, this is what you want.
+
+## Global mode
+
+**Use this when you want everything to go through one node.**
+
+In Global mode, Mihomo ignores rules and sends every connection through
+the proxy group you have selected. Local network traffic — your printer,
+your home server, Bonjour devices — also goes through the proxy, which
+is usually not what you want.
+
+Pick Global when:
+
+- You are debugging and want to bypass rule complexity.
+- Your provider explicitly tells you to.
+- You actually want everything to look like it is coming from one node
+  (some payment flows, some geo-tests).
+
+## Direct mode
+
+**Use this to keep Kumo running but stop proxying.**
+
+In Direct mode, Mihomo sends every connection direct, as if the proxy
+was off. The core stays running, the configuration stays loaded, and
+you can flip back to Rule or Global in one click.
+
+Pick Direct when:
+
+- You want to quickly test "does this site work without the proxy?".
+- You are on a network where the proxy is unnecessary, and you want
+  to leave Kumo open without taking the long path of stopping the core.
+
+<Callout type="info">
+Direct mode does **not** turn off macOS's system proxy setting. If
+**System Proxy** is on, macOS still routes traffic to Kumo — and Kumo
+just forwards it direct. If you want apps to bypass Kumo entirely, also
+turn the **System Proxy** toggle off.
+</Callout>
+
+## Switching mode does not break connections
+
+Mihomo handles mode switches live. Existing connections finish on
+whatever proxy they were using; new connections follow the new mode.
+You do not need to restart anything.
+
+## What's next
+
+- Add or change a [subscription](/docs/getting-started/subscriptions).
+- Try the menu bar icon for one-handed mode switching:
+  [A day with Kumo](/docs/getting-started/daily-use).

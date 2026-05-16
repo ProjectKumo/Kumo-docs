@@ -1,0 +1,107 @@
+---
+title: Auto-update internals
+description: Channels, the latest.yml manifest format, the runtime update flow, and how to host your own feed.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+The
+[Getting Started version](/docs/getting-started/updates) covers what an
+ordinary user needs. This page is for people who want to understand the
+moving parts or host their own update feed.
+
+## Release channels
+
+| Channel | Manifest URL                                                                                  |
+| ------- | --------------------------------------------------------------------------------------------- |
+| stable  | `https://github.com/ProjectKumo/KumoApp/releases/latest/download/latest.yml`                  |
+| beta    | `https://github.com/ProjectKumo/KumoApp/releases/download/pre-release/latest.yml`             |
+
+**Settings → Updates** can override the manifest URL for private feeds
+or local testing. Leave it blank to use the channel default.
+
+## Manifest format
+
+`latest.yml` is published alongside each release:
+
+```yaml
+version: 0.0.1
+channel: stable
+downloadURL: https://github.com/ProjectKumo/KumoApp/releases/download/0.0.1/Kumo-macos-0.0.1-arm64.dmg
+assetName: Kumo-macos-0.0.1-arm64.dmg
+sha256: <64-character-sha256>
+releaseNotes: |
+  See https://github.com/ProjectKumo/KumoApp/releases/tag/0.0.1
+```
+
+The same fields are accepted as JSON, for local testing and backwards
+compatibility.
+
+## Runtime flow
+
+1. `AppUpdateManager` polls the manifest every five minutes.
+2. When a new version is found, Kumo posts a **macOS notification**
+   with three actions:
+   - **Install Now**
+   - **Remind Me Later**
+   - **Restart Now** (once the download is ready)
+3. The download writes to
+   `~/Library/Application Support/Kumo/updates/downloads/`.
+4. The detached DMG installer logs to
+   `~/Library/Application Support/Kumo/logs/app-update-installer.log`.
+5. The installer mounts the DMG, copies `Kumo.app` over the current
+   install, and re-launches the app.
+
+The SHA-256 in the manifest is verified against the downloaded artifact
+before the installer is invoked. A checksum mismatch aborts the update.
+
+<Callout type="info">
+The download is asynchronous and resumable. If you close Kumo
+mid-download, the next polling cycle picks up where it left off.
+</Callout>
+
+## When auto-install fails
+
+Auto-replacement requires the current app's parent directory to be
+writable. If Kumo is in a protected location (or installed for the
+whole machine), the update flow reports a clear error and you can
+install the DMG manually from the download page in
+**Settings → Updates**.
+
+## Host your own feed
+
+To host your own feed (for private builds, an internal beta, or
+anything else):
+
+1. Build a notarized DMG.
+2. Compute its SHA-256.
+3. Publish `latest.yml` with the fields above.
+4. Point **Settings → Updates → Manifest URL** at your `latest.yml`.
+
+Anything that can serve static files over HTTPS works — S3, R2, GitHub
+Pages, a private nginx, you name it.
+
+## Manual check
+
+Open **Settings → Updates** and click **Check for Updates**. The same
+check is also exposed in the custom About window.
+
+## Roll back
+
+To roll back to a specific release:
+
+1. Download the DMG for the version you want from GitHub Releases.
+2. Quit Kumo.
+3. Replace `/Applications/Kumo.app` with the version from the DMG.
+4. Launch Kumo.
+
+`state.json` and `preferences.json` decode missing fields with
+defaults, so downgrades do not invalidate persisted state — but
+features added in newer versions will of course be absent.
+
+## See also
+
+- [Permissions](/docs/advanced/permissions) — why updates do not ask
+  for root in v1.
+- [File locations](/docs/advanced/file-locations) — where the
+  installer log and download cache live.

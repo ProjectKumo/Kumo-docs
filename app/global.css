@@ -13,16 +13,16 @@ html > body[data-scroll-locked] {
 
 /* Sidebar tab colors — one accent per audience track. */
 :root {
-  --for-everyone-color: hsl(217, 91%, 55%);
-  --power-user-color: hsl(150, 65%, 38%);
+  --getting-started-color: hsl(217, 91%, 55%);
+  --advanced-color: hsl(150, 65%, 38%);
   --contributing-color: hsl(280, 75%, 55%);
   --internals-color: hsl(190, 75%, 42%);
   --roadmap-color: hsl(30, 90%, 50%);
 }
 
 .dark {
-  --for-everyone-color: hsl(217, 100%, 78%);
-  --power-user-color: hsl(150, 70%, 70%);
+  --getting-started-color: hsl(217, 100%, 78%);
+  --advanced-color: hsl(150, 70%, 70%);
   --contributing-color: hsl(280, 90%, 80%);
   --internals-color: hsl(190, 85%, 70%);
   --roadmap-color: hsl(30, 100%, 70%);

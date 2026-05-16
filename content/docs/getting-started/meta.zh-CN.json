@@ -1,0 +1,17 @@
+{
+  "title": "入门",
+  "description": "安装 Kumo 并连接你的订阅。",
+  "icon": "Sparkles",
+  "root": true,
+  "pages": [
+    "index",
+    "install",
+    "subscriptions",
+    "daily-use",
+    "outbound-modes",
+    "sub-store",
+    "updates",
+    "troubleshooting",
+    "faq"
+  ]
+}

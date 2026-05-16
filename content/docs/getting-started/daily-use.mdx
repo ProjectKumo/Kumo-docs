@@ -1,0 +1,106 @@
+---
+title: Daily use
+description: The dashboard, the menu bar, the system proxy toggle, and what each card is telling you.
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+Once Kumo is running with a profile, the day-to-day shape is small:
+you mostly look at the **Overview** screen, maybe pick a node from
+**Proxies**, and otherwise let it run from the menu bar.
+
+## The Overview screen
+
+The Overview screen is the home base. It has two areas:
+
+- **Left:** a large status card. It shows whether Kumo is running,
+  the current outbound mode, the active profile, and a Start / Stop
+  button.
+- **Right:** four small cards — Profile, Traffic, System Proxy, TUN —
+  each telling you one specific thing.
+
+You can drag the divider between left and right to give yourself more
+room. Kumo remembers where you put it.
+
+### The status card
+
+The status card has three states:
+
+- **Stopped** — the proxy is off. Click **Start** to bring it up.
+- **Running** — the proxy is on. The card shows the active profile and
+  the outbound mode.
+- **Error** — something went wrong. The card shows a short message.
+  See [Troubleshooting](/docs/getting-started/troubleshooting).
+
+### The four small cards
+
+| Card           | What it shows                                                              |
+| -------------- | -------------------------------------------------------------------------- |
+| Profile        | The active profile name, traffic used, and a Refresh button.               |
+| Traffic        | Live upload and download, plus a 60-second chart.                          |
+| System Proxy   | Whether macOS is sending traffic through Kumo, with a toggle.              |
+| TUN            | Whether Kumo is routing your entire Mac's traffic. See [Advanced](/docs/advanced). |
+
+If Kumo is **Stopped**, the cards show the last known values so you can
+glance at them before deciding to start the core again.
+
+## The Proxies screen
+
+Switch to **Proxies** in the sidebar to see your groups and nodes.
+
+- The first level lists the **groups** in your subscription (often a
+  "Proxy" group, plus things like "Streaming" or "Direct").
+- Click a group to see its **members** — the actual proxy nodes.
+- For a **select** group, click any node to pick it. Kumo remembers the
+  choice and tells Mihomo.
+- For an **automatic** group (URLTest, Fallback, LoadBalance), the
+  group manages its own selection. Kumo shows you the current pick but
+  you cannot override it directly.
+
+Each node shows a country flag (when Kumo can figure it out) and a
+latency pill that turns green / orange / red based on the last test.
+Click the **Test Latency** button on a group to refresh the numbers.
+
+## The menu bar
+
+There is a menu bar item shaped like the Kumo icon. Click it to open a
+small menu with the most common controls:
+
+- Start / Stop the core.
+- Switch the outbound mode (Rule / Global / Direct).
+- Toggle the system proxy.
+- Open the main window.
+- Quit Kumo.
+
+The icon changes shape based on the current state — solid when running,
+hollow when stopped, with a small badge when something needs your
+attention.
+
+<Callout type="info">
+If you do not see the menu bar icon, another app (Bartender, Hidden
+Bar, iStat Menus) may be hiding it. Open **Settings → General** and
+check that **Show menu bar icon** is on.
+</Callout>
+
+## The Sub-Store screen
+
+Kumo bundles **Sub-Store**, a small tool for managing multiple proxy
+subscriptions in one place. You can ignore it if a single subscription
+URL is all you need. See [Sub-Store](/docs/getting-started/sub-store) for
+the user-friendly tour.
+
+## What you usually do not need to touch
+
+Most users will live in **Overview** and **Proxies** all day. The other
+destinations in the sidebar — Connections, Logs, Rules, Core, System
+Proxy, TUN, DNS — are there for specific moments:
+
+- **Connections** is useful when you want to know "what app is using
+  the proxy right now?".
+- **Logs** is useful when something is misbehaving and you want to see
+  what Mihomo is saying.
+- **Core, System Proxy, TUN, DNS** are for fine control. Defaults are
+  good for most people.
+
+If you find yourself wanting to dig into any of those, jump to the
+[Advanced](/docs/advanced) track.

@@ -1,0 +1,20 @@
+{
+  "title": "Advanced",
+  "description": "Command line, profile authoring, and macOS automation.",
+  "icon": "Terminal",
+  "root": true,
+  "pages": [
+    "index",
+    "command-line",
+    "cli-reference",
+    "profiles-reference",
+    "overrides",
+    "sub-store-hosting",
+    "automation",
+    "agent-skills",
+    "keyboard-shortcuts",
+    "file-locations",
+    "permissions",
+    "auto-updates"
+  ]
+}
