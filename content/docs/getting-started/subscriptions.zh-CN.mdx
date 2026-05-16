@@ -6,25 +6,25 @@ description: 粘贴订阅 URL,让 Kumo 把它下载下来,完成你的第一次�
 import { Callout } from 'fumadocs-ui/components/callout';
 import { Step, Steps } from 'fumadocs-ui/components/steps';
 
-**订阅** 是一段 URL,指向一份代理节点列表,由你的代理服务商托管。
-大多数服务商会在它们的控制台里给你这段 URL,通常标记为
+**订阅** 是一段 URL,指向一份代理节点列表,由代理服务商托管。
+大多数服务商会在控制台里提供这段 URL,通常标记为
 "Clash 订阅" 或 "Clash URL"。
 
-Kumo 使用 Clash / Mihomo 订阅格式。如果服务商给的是 Clash 订阅,
-你可以直接粘贴进来。
+Kumo 使用 Clash / Mihomo 订阅格式。如果服务商提供的是 Clash 订阅,
+可以直接粘贴使用。
 
 ## 首次启动
 
-第一次打开 Kumo 时会出现一个简短的引导面板,共四步:
+第一次打开 Kumo 时会出现一个引导面板,共四步:
 
-1. **欢迎** —— 一句简单的 "你好,这里是 Kumo"。
+1. **欢迎** —— Kumo 简介。
 2. **命令行工具** —— 可选;详见
-   [进阶](/docs/advanced/command-line)。
+   [进阶 → 命令行](/docs/advanced/command-line)。
 3. **Agent 技能** —— 可选;详见
-   [进阶](/docs/advanced/agent-skills)。
+   [进阶 → Agent 技能](/docs/advanced/agent-skills)。
 4. **完成** —— 进入主界面。
 
-可选步骤现在可以跳过,以后随时可以在 **设置** 里启用。
+可选步骤可以跳过,以后随时在 **设置** 里启用。
 
 ## 添加第一个订阅
 
@@ -37,13 +37,13 @@ Kumo 使用 Clash / Mihomo 订阅格式。如果服务商给的是 Clash 订阅,
 
 <Step>
 ### 添加一个新配置
-点击右上角的 **+** 按钮。会弹出一个表单,要求你填入 URL 或本地
+点击右上角的 **+** 按钮。会弹出一个表单,要求填入 URL 或本地
 文件。
 </Step>
 
 <Step>
 ### 粘贴订阅 URL
-把服务商给你的 URL 粘到 **URL** 字段。给这个配置起一个你能认出的
+把服务商提供的 URL 粘到 **URL** 字段。给这个配置起一个能认出的
 名字 —— 比如 "Main" 或服务商的名字。
 </Step>
 
@@ -61,14 +61,14 @@ Kumo 使用 Clash / Mihomo 订阅格式。如果服务商给的是 Clash 订阅,
 
 </Steps>
 
-现在你已经有了一个配置,但 Kumo 还没启动。该让它跑起来了。
+配置已保存,但 Kumo 尚未启动。
 
 ## 启动 Kumo
 
-切换到 **概览**(侧边栏顶部)。左侧的大状态卡片显示 **已停止**。
+切换到 **概览**(侧边栏顶部)。左侧的状态卡片显示 **已停止**。
 点击 **启动**。
 
-一两秒后,状态会变成 **运行中**。右侧的四张小卡片也都会活过来:
+一两秒后,状态会变成 **运行中**。右侧的四张小卡片更新:
 
 - **配置** —— 显示当前活跃的配置和流量计数。
 - **流量** —— 实时上传和下载的小图表。
@@ -78,23 +78,23 @@ Kumo 使用 Clash / Mihomo 订阅格式。如果服务商给的是 Clash 订阅,
 
 ## 把 Mac 的流量送进 Kumo
 
-仅仅启动 Kumo 只是让代理在 `127.0.0.1` 上 *可用*。要让日常浏览
-流量真的走代理,需要在概览界面把 **系统代理** 切换到 **开**。
+启动 Kumo 后,代理在 `127.0.0.1` 上可用。要让浏览流量走代理,
+在概览界面把 **系统代理** 切换到 **开**。
 
 <Callout type="info">
 系统代理使用的是 macOS 内置的 `networksetup` 开关,跟
-**系统设置 → 网络** 里的是同一个。它**不会**安装 VPN 配置。你可以
-随时关掉,macOS 会立即恢复。
+**系统设置 → 网络** 里的是同一个。它**不会**安装 VPN 配置。关闭后
+macOS 会立即恢复。
 </Callout>
 
-打开 Safari,访问
+打开浏览器,访问
 [ipinfo.io](https://ipinfo.io) 或
-[whatismyip.com](https://whatismyip.com),你应该能看到你选择节点的
-所在地区。
+[whatismyip.com](https://whatismyip.com),显示的位置应与所选节点
+所在地区一致。
 
-## 接下来呢
+## 下一步
 
 - [熟悉主界面](/docs/getting-started/daily-use)。
 - [在「规则」「全局」「直连」模式间切换](/docs/getting-started/outbound-modes)。
 - 订阅刷不动?见
-  [排查问题](/docs/getting-started/troubleshooting)。
+  [故障排查](/docs/getting-started/troubleshooting)。

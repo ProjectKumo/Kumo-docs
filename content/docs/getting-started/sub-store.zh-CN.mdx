@@ -5,13 +5,13 @@ description: 在一个地方管理多份订阅、合并它们,给 Kumo 喂一份
 
 import { Callout } from 'fumadocs-ui/components/callout';
 
-如果你只有一份订阅,可以跳过这一页。
+如果只有一份订阅,可以跳过这一页。
 [添加你的订阅](/docs/getting-started/subscriptions) 里那套简单的流程
 已经足够。
 
 如果你同时管着**两份或更多**订阅 —— 比如一份快的加一份备用、或者
-一个地区一份 —— Kumo 内置了一个叫 **Sub-Store** 的小工具,把它们都
-放在同一个地方,让你随意组合。
+一个地区一份 —— Kumo 内置了一个叫 **Sub-Store** 的工具,把它们都
+放在同一个地方,允许合并。
 
 ## Sub-Store 是用来干什么的
 
@@ -20,7 +20,7 @@ import { Callout } from 'fumadocs-ui/components/callout';
 - 做一些小调整(重命名分组、按关键字过滤节点),不用手动改 YAML。
 - 把合并后的输出当作一份配置交给 Kumo,跟普通订阅一模一样的用法。
 
-它**不是必需的**。很多用户用一份订阅就过得很愉快,从来没打开过
+它**不是必需的**。很多用户用一份订阅就够了,从来没打开过
 Sub-Store。
 
 ## 打开 Sub-Store
@@ -28,9 +28,9 @@ Sub-Store。
 在 Kumo 侧边栏里点 **Sub-Store**。第一次打开时,Kumo 会在后台准备
 内置的后端,然后在一个原生面板里显示 Sub-Store 界面。
 
-你会看到两个主标签页:
+两个主标签页:
 
-- **订阅** —— 你的原始订阅 URL。
+- **订阅** —— 原始订阅 URL。
 - **组合** —— 由一份或多份订阅合并而来的输出。
 
 ## 在 Sub-Store 里加一份订阅
@@ -56,7 +56,7 @@ Sub-Store 会拉取订阅,显示节点数。
 
 ## 把 Sub-Store 的输出喂给 Kumo
 
-1. 复制你组合的 Sub-Store 分享 URL。
+1. 复制组合的 Sub-Store 分享 URL。
 2. 在 Kumo 里,进入 **配置 → +**。
 3. 粘贴 URL。
 4. 保存。
@@ -69,7 +69,7 @@ Sub-Store 只要 Kumo 在跑,就**本地**运行。这个分享 URL 只有你的
 上能用 —— 不会暴露到公网。
 </Callout>
 
-## 想自己跑 Sub-Store 后端?
+## 自定义 Sub-Store 后端
 
 有些用户偏好自己托管 Sub-Store(放在 NAS、VPS 或容器里),
 让多台设备共享一份。Kumo 支持自定义 Sub-Store 后端 —— 见
