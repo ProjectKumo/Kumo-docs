@@ -1,21 +1,19 @@
 ---
 title: Contributing
-description: A friendly tour for anyone who wants to file an issue, fix a bug, ship a feature, or improve these docs.
+description: How to file an issue, fix a bug, ship a feature, or improve these docs.
 ---
 
 import { Cards, Card } from 'fumadocs-ui/components/card';
 import { Callout } from 'fumadocs-ui/components/callout';
 
-Welcome. Kumo is an open project under
+Kumo is an open project under
 [AGPL-3.0-only](https://github.com/ProjectKumo/KumoApp/blob/main/LICENSE).
-We're happy to have you here.
 
-This track assumes you can run a terminal and read Swift, but you do **not**
-need to be a macOS systems engineer to contribute. A typo fix counts. So
-does a better error message. So does a fresh pair of eyes on a confusing
-screen.
+This track assumes familiarity with the terminal and Swift. No macOS
+systems engineering background is required — typo fixes, error-message
+improvements, and UI clarifications are all valid contributions.
 
-## Where do you want to start?
+## Where to start
 
 <Cards>
   <Card title="Set up your machine" href="/docs/contributing/build-from-source">
@@ -40,8 +38,6 @@ screen.
 
 ## Ground rules
 
-A few things to keep in mind before you start:
-
 - **Be kind.** Reviewers, reporters, and other contributors are real people.
 - **One change per PR.** Small, focused diffs land faster.
 - **Tests are part of the change.** If you fix a bug, add a test that would
@@ -54,13 +50,10 @@ A few things to keep in mind before you start:
 
 <Callout type="info">
 If you're not sure whether a change is welcome, open a discussion or a
-draft PR first. We'd rather talk early than have you sink a weekend into
-something we'd have to redirect.
+draft PR first. Early feedback prevents wasted effort.
 </Callout>
 
 ## Good first changes
-
-These are the easiest entry points:
 
 - Fix a typo or broken link in **these docs**
   ([Kumo-docs](https://github.com/ProjectKumo/Kumo-docs)).
@@ -70,6 +63,5 @@ These are the easiest entry points:
   copy conventions matter here).
 - Add a missing test for a `KumoCoreKit` model or helper.
 
-If you find something that looks easy on the surface but turns out to be
-load-bearing, that's normal. Ask in the issue or PR and someone will help
-you find a safe scope.
+If something looks easy on the surface but turns out to be structural,
+ask in the issue or PR. Someone will help find a safe scope.
