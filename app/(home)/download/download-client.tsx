@@ -4,10 +4,10 @@ import { useEffect, useState, type ComponentType, type SVGProps } from 'react';
 import { SiApple, SiLinux } from 'react-icons/si';
 import type { LatestRelease, Platform } from '@/lib/releases';
 import {
+  archLabel,
   formatSize,
   platformLabel,
   platformOS,
-  sortPlatforms,
 } from '@/lib/releases';
 
 interface DownloadClientProps {
@@ -137,6 +137,37 @@ const OS_LABEL: Record<'macos' | 'windows' | 'linux', string> = {
   linux: 'Linux',
 };
 
+// Group all six platforms into three OS-level cards. Each card lists its two
+// archs as sub-rows, so the visual hierarchy matches how people pick a build:
+// first the OS, then the chip. Order inside a card follows the canonical
+// arm64-first (Apple Silicon / ARM64) → x64 sequence.
+const OS_CARDS: ReadonlyArray<{
+  os: 'macos' | 'windows' | 'linux';
+  archs: ReadonlyArray<{ arch: 'arm64' | 'x64'; platform: Platform }>;
+}> = [
+  {
+    os: 'macos',
+    archs: [
+      { arch: 'arm64', platform: 'macos-arm64' },
+      { arch: 'x64', platform: 'macos-x64' },
+    ],
+  },
+  {
+    os: 'windows',
+    archs: [
+      { arch: 'arm64', platform: 'windows-arm64' },
+      { arch: 'x64', platform: 'windows-x64' },
+    ],
+  },
+  {
+    os: 'linux',
+    archs: [
+      { arch: 'arm64', platform: 'linux-arm64' },
+      { arch: 'x64', platform: 'linux-x64' },
+    ],
+  },
+];
+
 export function DownloadClient({ release, releasesUrl }: DownloadClientProps) {
   const [detection, setDetection] = useState<DetectionState>({ kind: 'pending' });
 
@@ -150,15 +181,6 @@ export function DownloadClient({ release, releasesUrl }: DownloadClientProps) {
       alive = false;
     };
   }, []);
-
-  const allPlatforms: Platform[] = [
-    'macos-arm64',
-    'macos-x64',
-    'windows-x64',
-    'windows-arm64',
-    'linux-x64',
-    'linux-arm64',
-  ];
 
   const detected = detection.kind === 'detected' ? detection.platform : null;
   const detectedAsset = detected && release ? release.byPlatform[detected] : null;
@@ -189,50 +211,76 @@ export function DownloadClient({ release, releasesUrl }: DownloadClientProps) {
         </div>
 
         <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {sortPlatforms(allPlatforms).map((platform) => {
-            const asset = release?.byPlatform[platform];
-            const isCurrent = detected === platform;
-            const os = platformOS(platform);
+          {OS_CARDS.map(({ os, archs }) => {
             const OsIcon = OS_ICON[os];
+            const isCurrentOS = detected ? platformOS(detected) === os : false;
             return (
               <li
-                key={platform}
-                className={`rounded-lg border p-4 transition-colors ${
-                  isCurrent
+                key={os}
+                className={`rounded-lg border bg-fd-card transition-colors overflow-hidden ${
+                  isCurrentOS
                     ? 'border-fd-primary bg-fd-primary/5'
-                    : 'border-fd-border bg-fd-card hover:bg-fd-accent/40'
+                    : 'border-fd-border'
                 }`}
               >
-                <div className="flex items-center justify-between gap-2 mb-2">
-                  <span className="inline-flex items-center gap-1.5 text-xs uppercase tracking-wider text-fd-muted-foreground">
-                    <OsIcon
-                      aria-hidden="true"
-                      className="size-3.5 shrink-0"
-                    />
+                <div className="flex items-center justify-between gap-2 px-4 pt-4 pb-3">
+                  <span className="inline-flex items-center gap-2 font-medium">
+                    <OsIcon aria-hidden="true" className="size-4 shrink-0" />
                     {OS_LABEL[os]}
                   </span>
-                  {isCurrent ? (
+                  {isCurrentOS ? (
                     <span className="text-[10px] font-medium uppercase tracking-wider text-fd-primary">
                       your platform
                     </span>
                   ) : null}
                 </div>
-                <p className="font-medium mb-3">{platformLabel(platform)}</p>
-                {asset ? (
-                  <a
-                    href={asset.url}
-                    className="inline-flex items-center gap-1 text-sm font-medium text-fd-primary hover:underline"
-                  >
-                    Download {asset.name.split('.').pop()?.toUpperCase()}
-                    <span className="text-fd-muted-foreground font-normal">
-                      ({formatSize(asset.size)})
-                    </span>
-                  </a>
-                ) : (
-                  <p className="text-sm text-fd-muted-foreground">
-                    Not yet available
-                  </p>
-                )}
+
+                <ul className="divide-y divide-fd-border border-t border-fd-border">
+                  {archs.map(({ arch, platform }) => {
+                    const asset = release?.byPlatform[platform];
+                    const isCurrentArch = detected === platform;
+                    return (
+                      <li
+                        key={platform}
+                        className={`px-4 py-3 text-sm transition-colors ${
+                          isCurrentArch
+                            ? 'bg-fd-primary/10'
+                            : 'hover:bg-fd-accent/40'
+                        }`}
+                      >
+                        <div className="flex flex-col gap-1">
+                          <span
+                            className={`text-xs uppercase tracking-wider ${
+                              isCurrentArch
+                                ? 'font-medium text-fd-primary'
+                                : 'text-fd-muted-foreground'
+                            }`}
+                          >
+                            {archLabel(os, arch)}
+                          </span>
+                          {asset ? (
+                            <a
+                              href={asset.url}
+                              className="inline-flex items-baseline gap-1.5 font-medium text-fd-primary hover:underline"
+                              aria-label={`Download ${platformLabel(platform)} (${asset.name}, ${formatSize(asset.size)})`}
+                            >
+                              <span>
+                                Download {asset.name.split('.').pop()?.toUpperCase()}
+                              </span>
+                              <span className="text-fd-muted-foreground font-normal text-xs">
+                                {formatSize(asset.size)}
+                              </span>
+                            </a>
+                          ) : (
+                            <span className="text-fd-muted-foreground">
+                              Not yet available
+                            </span>
+                          )}
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
               </li>
             );
           })}

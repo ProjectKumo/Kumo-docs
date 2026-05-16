@@ -100,6 +100,24 @@ export function platformOS(p: Platform): 'macos' | 'windows' | 'linux' {
   return 'linux';
 }
 
+/** Architecture for a platform. */
+export function platformArch(p: Platform): 'arm64' | 'x64' {
+  return p.endsWith('arm64') ? 'arm64' : 'x64';
+}
+
+/**
+ * Pretty label for an arch within an OS context. Apple ships "Apple Silicon"
+ * marketing for arm64 and "Intel" for x64, while Windows/Linux users just call
+ * them "ARM64" and "x64" — so the wording depends on the OS.
+ */
+export function archLabel(
+  os: 'macos' | 'windows' | 'linux',
+  arch: 'arm64' | 'x64',
+): string {
+  if (os === 'macos') return arch === 'arm64' ? 'Apple Silicon' : 'Intel';
+  return arch === 'arm64' ? 'ARM64' : 'x64';
+}
+
 const PLATFORM_ORDER: Platform[] = [
   'macos-arm64',
   'macos-x64',
