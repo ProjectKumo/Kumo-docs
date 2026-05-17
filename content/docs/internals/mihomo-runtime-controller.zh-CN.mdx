@@ -1,0 +1,117 @@
+---
+title: Mihomo 运行时与控制器
+description: Kumo 如何监管 Mihomo 进程、它使用的控制器 API 表面、传输细节与错误处理。
+---
+
+## 运行时模型
+
+Kumo 管理一个 Mihomo 核心可执行文件。核心可以来自:
+
+- 通过 `--core` 传给 CLI 的路径。
+- `KUMO_MIHOMO_PATH` 环境变量。
+- 捆绑的 `mihomo` 资源。
+- 常见 Homebrew 或系统路径。
+
+当前实现以生成的 work 目录启动 Mihomo。生成的 `config.yaml` 包含 Kumo 控制的
+控制器和代理设置。
+
+## 进程监管
+
+`CoreSupervisor` 处理:
+
+- 准备 Application Support 目录。
+- 写入运行时配置。
+- 用 `Process` 启动 Mihomo。
+- 将进程标识符记录到状态和 `work/core.pid`。
+- 以优雅的信号升级路径停止已记录的进程。
+- 检测陈旧的进程标识符。
+- 记录运行时生命周期事件。
+
+Stop 同时使用持久化的状态 PID 和 `work/core.pid` 回退,然后依次升级
+`SIGINT`、`SIGTERM` 和 `SIGKILL`。对于当前进程启动的子进程,
+`CoreSupervisor` 在等待时使用 `waitpid(..., WNOHANG)`,这样已退出的子进程会被
+回收,而非被误认为仍在运行的僵尸进程。停止成功时,PID 文件和存储的 PID
+一起清除。状态检查也会查询 `work/core.pid`,因此即使 JSON 状态丢失了 PID
+但托管核心仍在运行,Kumo 也能恢复运行状态。
+
+这仍然作为本地进程回退可用。当 Kumo Helper 已安装且可达时,
+`KumoController` 将 start、stop、restart、系统代理和 TUN 操作路由到签名的 Unix
+socket 服务后端,让特权 Helper 拥有 Mihomo。
+
+## TUN 运行时设置
+
+`CoreRuntimeSettings` 可以携带 `TunSettings`。当 TUN 启用且服务模式可用时,
+`RuntimeConfigBuilder` 移除配置提供的 `tun`/`dns` 顶层块并追加 Kumo 控制的
+TUN 和 DNS 设置:
+
+- `tun.enable`
+- `tun.stack`
+- `tun.auto-route`
+- `tun.auto-detect-interface`
+- `tun.strict-route`
+- `tun.dns-hijack`
+- `tun.mtu`
+- `dns.enable`
+- `dns.enhanced-mode`
+- `dns.fake-ip-range`
+- `dns.nameserver`
+
+在 macOS 上,Kumo 仅在设备名已以 `utun` 开头时写入配置的 TUN 设备名,匹配平台
+虚拟接口命名规则。如果没有特权 Helper 或特权进程可用,TUN 启用请求会被拒绝,
+存储的状态在 Mihomo 重启前回滚。
+
+当 Kumo Helper 正在运行时,`POST /tun/enable` 更新相同的运行时设置,重写受控
+配置,重启 Helper 拥有的 Mihomo 进程,等待控制器就绪,并报告结果的
+`TunStatus`。涉及的 macOS 授权是 Helper 安装/修复,而非 NetworkExtension VPN
+配置提示。
+
+## 控制器客户端
+
+`MihomoControllerClient` 包装 Mihomo external-controller API:
+
+- `GET /version`
+- `GET /configs`
+- `PATCH /configs`
+- `GET /proxies`
+- `PUT /proxies/{group}`
+- `GET /proxies/{proxy}/delay`
+- `GET /rules`
+- `GET /connections`
+- `DELETE /connections`
+- `DELETE /connections/{id}`
+- `GET /traffic` over WebSocket
+- `GET /memory` over WebSocket
+
+它将代理组映射为 `ProxyGroup`,代理名映射为 `ProxyNode`,规则映射为
+`RuleEntry`,连接映射为 `ConnectionEntry`。
+
+## Sparkle 对齐控制器表面
+
+以下 external-controller 端点计划用于 Configure 和 Inspect 页面:
+
+- `PATCH /rules/disable`
+- `GET /providers/proxies`
+- `PUT /providers/proxies/{name}`
+- `GET /providers/rules`
+- `PUT /providers/rules/{name}`
+- `POST /upgrade/geo`
+- `GET /logs` over WebSocket 或等效流式传输
+
+## 当前传输
+
+本地模式使用 HTTP 通过 `URLSession` 与 Mihomo 的 external-controller 通信。
+服务模式使用 Kumo 的签名 Unix socket 传输请求 `KumoService` 执行特权生命周期
+操作,而 Helper 拥有的 Mihomo 进程仍暴露其正常的 external-controller API。
+
+## 错误处理
+
+控制器失败在响应不成功时表现为 `KumoError.controllerResponse(status, body)`。
+UI 和 CLI 调用者应显示结果消息而不隐藏 HTTP 状态。
+
+## 未来工作
+
+- 为事件流添加弹性重连策略。
+- 添加重启策略。
+- 添加提供者初始化进度。
+- 添加提供者更新和预览 API。
+- 添加结构化日志流和缓存限制。

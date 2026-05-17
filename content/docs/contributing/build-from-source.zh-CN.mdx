@@ -1,0 +1,140 @@
+---
+title: 从源码构建
+description: 克隆仓库、安装 Xcode,并在本地运行 Kumo。
+---
+
+import { Steps, Step } from 'fumadocs-ui/components/steps';
+import { Callout } from 'fumadocs-ui/components/callout';
+
+Kumo 可以在大约十五分钟内从源码构建。
+
+## 要求
+
+- **macOS 15 Sequoia 或更高版本**,运行在 Apple Silicon 上。应用使用的 API 在
+  macOS 14 或 x86_64 上不可用。
+- **Xcode 16 或更高版本**,带 **Swift 6.0** 工具链。从 App Store 安装,然后
+  打开一次以完成命令行工具的安装。
+- **Git**(Xcode 命令行工具自带)。
+- **可选但推荐**:
+  [XcodeGen](https://github.com/yonaskolb/XcodeGen),用于从 `project.yml`
+  重新生成 Xcode 项目(`brew install xcodegen`)。
+
+Mihomo **不需要**手动安装。Kumo 可以在首次启动时下载一份托管版本。
+
+## 克隆并构建
+
+<Steps>
+<Step>
+### 克隆仓库
+
+```bash
+git clone https://github.com/ProjectKumo/KumoApp.git
+cd KumoApp
+```
+</Step>
+
+<Step>
+### 构建 Swift 包
+
+```bash
+make swift-build
+```
+
+这会编译所有产物 — 应用、CLI、共享库和服务二进制文件 — 以 debug 模式。
+首次构建需要几分钟,因为 SwiftPM 要解析依赖。
+</Step>
+
+<Step>
+### 运行应用
+
+```bash
+make dev
+```
+
+`make dev` 会退出任何正在运行的 Kumo,重新构建 `.app` bundle,并打开 debug
+版本。窗口会以**概览**选中状态出现。
+</Step>
+
+<Step>
+### 尝试 CLI
+
+```bash
+make run-cli ARGS="status --json"
+```
+
+输出应该是一个 JSON 信封:
+
+```json
+{
+  "ok": true,
+  "data": { "running": false, "mode": "rule", "...": "..." },
+  "error": null
+}
+```
+
+`make run-cli ARGS="..."` 等同于用这些参数运行 `kumo` 可执行文件,但始终使用
+当前的 debug 构建版本。
+</Step>
+</Steps>
+
+## 常用的 make 目标
+
+`Makefile` 是构建和测试流程的唯一真相来源。遇到意外行为时阅读它 — 它很短。
+
+| 目标 | 作用 |
+| --- | --- |
+| `make help` | 打印每个目标及其一行描述。 |
+| `make swift-build` | 为所有产物运行 `swift build`。 |
+| `make build-release` | `swift build -c release`。 |
+| `make app` | 将 `.app` bundle 构建到 `build/Build/Products/Debug/`。 |
+| `make app-release` | 构建 Release 配置的 `.app`。 |
+| `make dev` | 退出、重新构建并重新打开 debug 应用。最快的内循环。 |
+| `make run-app` | 通过 `swift run` 启动 SwiftUI 应用(无 `.app` bundle)。 |
+| `make run-cli ARGS="..."` | 用任意参数调用 CLI。 |
+| `make swift-test` | 用 SwiftPM 运行单元测试。 |
+| `make xcode-test` | 通过 `xcodebuild` 运行单元测试。 |
+| `make check` | 构建 + 测试 + 对 `kumo status --json` 做冒烟测试。 |
+| `make release-dmg VERSION=0.0.1` | 构建 Release 应用和可公证的 DMG。 |
+| `make reset-local-state` | 清空 `~/Library/Application Support/Kumo/`。 |
+| `make clean` | 移除 SwiftPM 构建产物。 |
+
+<Callout type="warn">
+`make reset-local-state` 会删除本地 Kumo 安装中的配置、覆写规则和 Sub-Store
+数据。仅在需要真正的首次启动状态时使用 — 不要在数据重要时使用。
+</Callout>
+
+## 从 Xcode 运行
+
+如果更喜欢 Xcode 而非命令行:
+
+```bash
+make generate          # 从 project.yml 重新生成 Kumo.xcodeproj
+open Kumo.xcodeproj
+```
+
+选择 **KumoApp** scheme 并按 ⌘R。共享库、CLI 和服务都是同一个 workspace
+的一部分。
+
+要在 Xcode 中运行包测试,切换到 **Kumo-Package** scheme。
+
+## 常见构建失败
+
+- **`xcodegen: command not found`** — 用 `brew install xcodegen` 安装,或跳过
+  `make generate` 直接使用 SwiftPM(`make swift-build`、`make run-app`)。
+- **Sub-Store 准备步骤失败** — `make prepare-substore-runtime` 由
+  `make swift-build` 调用。它会将 Node 运行时下载到
+  `Sources/KumoCoreKit/Resources/SubStore/`。如果网络阻止了该操作,在开发
+  无关内容时设置 `KUMO_SKIP_SUBSTORE=1` 以快速重新构建。
+- **旧的 derived data** — Xcode 缓存可能在 Swift 工具链升级后仍然存活。
+  `make clean && make swift-build` 可清除它们。
+- **Intel Mac** — Kumo v1 仅支持 Apple Silicon。构建会成功,但部分运行时功能
+  受 `arm64` 限制。
+
+## 内循环技巧
+
+- UI 变更使用 `make dev`。这是在真实 `.app` 中看到编辑结果的最快方式。
+- CLI 变更使用 `make run-cli ARGS="..."`,比重构整个应用更快。
+- `KumoCoreKit` 变更在 `Tests/KumoCoreTests` 中编写单元测试并运行
+  `swift test`。测试目标刻意保持轻量,启动迅速。
+- 在侧边终端中保持 `tail -F ~/Library/Application Support/Kumo/logs/core.log` —
+  这是了解 Mihomo 正在做什么的最佳视角。

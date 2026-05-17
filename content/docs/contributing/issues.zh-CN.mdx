@@ -1,0 +1,103 @@
+---
+title: 提交 issue
+description: 复现 bug 需要什么信息,以及什么样的功能请求是可执行的。
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+Issue 位于
+[github.com/ProjectKumo/KumoApp/issues](https://github.com/ProjectKumo/KumoApp/issues)。
+文档 issue 位于
+[github.com/ProjectKumo/Kumo-docs/issues](https://github.com/ProjectKumo/Kumo-docs/issues)。
+
+一份写得好 issue 能为所有人节省时间。以下是好 issue 的构成要素。
+
+## 提交之前
+
+两分钟的检查能防止大多数重复:
+
+1. **搜索现有 issue** 中来自该问题的关键词。检查 open 和 closed —
+   closed issue 有时包含答案。
+2. **更新到最新稳定版** Kumo,从
+   [Releases](https://github.com/ProjectKumo/KumoApp/releases/latest)
+   下载并重试。bug 可能已经修复。
+3. **重读[故障排查](/docs/getting-started/troubleshooting)**。
+   大多数 "它不起作用" 的报告都对应三种已知情况之一。
+
+## Bug 报告需要什么
+
+将此模板复制到 issue 正文中:
+
+```text
+**发生了什么**
+清晰的一行描述。
+
+**我期望的**
+清晰的一行描述。
+
+**复现步骤**
+1. 打开 Kumo
+2. ...
+3. ...
+
+**Kumo 版本**
+Kumo → 关于,例如 0.0.3 (build 1)
+
+**macOS 版本与芯片**
+例如 macOS 15.4, Apple M2
+
+**`kumo doctor --json` 输出**
+<粘贴到这里>
+
+**相关日志**
+最后 50 行:
+  ~/Library/Application Support/Kumo/logs/core.log
+  ~/Library/Application Support/Kumo/logs/cli/*.log (如果是 CLI 相关)
+```
+
+`kumo doctor --json` 快照是最有用的单一产物。它一次性捕获了版本、核心状态、
+系统代理状态、控制器端点和最近的错误。
+
+<Callout type="warn">
+粘贴日志前,扫描个人信息。订阅 URL 有时包含 token。Mihomo 日志可能包含
+目标主机名。隐去你不舒服分享的内容。
+</Callout>
+
+## 功能请求需要什么
+
+知道该构建什么比构建它更难。一份有用的功能请求回答:
+
+1. **你想解决什么问题?** 描述情境,而非提出的解决方案。
+2. **你今天怎么做?** 变通方法告诉我们这个缺口的紧急程度。
+3. **"好"的标准是什么?** 一个粗略的草图、截图,或参考另一个工具如何处理它。
+4. **还有谁需要这个?** 个人偏好没问题。团队需求更有说服力。
+
+Kumo 刻意保持精简。不是每个请求都会落地 — 这通常是范围决策,而非对请求
+质量的评价。
+
+## 安全问题
+
+如果你发现安全问题 — 凭证泄露、权限提升、更新流程绕过等 — **不要**开公开
+issue。请发送邮件到
+[SECURITY.md](https://github.com/ProjectKumo/KumoApp/blob/main/SECURITY.md)
+中的地址。我们会进行分类并在修复中致谢。
+
+## "won't fix" 的含义
+
+有时我们在没有代码变更的情况下关闭 issue。原因通常是:
+
+- **超出范围。** Kumo 是一个专注的 Mihomo 客户端。例如,我们不会发布一个通用
+  DNS over HTTPS 服务。
+- **上游问题。** bug 在 Mihomo 或 macOS 系统代理中。我们会尽可能链接到上游
+  追踪器。
+- **按设计工作。** 看起来像 bug 的东西实际上是文档化的行为。我们通常会接受
+  文档 PR 来让这一点更清晰。
+
+"won't fix" 关闭不是对报告者的评判。它是关于项目范围的声明。
+
+## 提交之后
+
+- 我们通常会在几天内进行分类。
+- 如果我们要求更多信息,请回答 — 沉默的 issue 会被关闭。
+- 如果你在等待期间找到了修复,issue 是链接
+  [pull request](/docs/contributing/pull-requests) 的完美地方。

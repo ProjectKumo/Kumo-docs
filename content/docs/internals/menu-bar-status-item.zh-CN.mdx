@@ -1,0 +1,39 @@
+---
+title: 菜单栏状态项
+description: Kumo 持久菜单栏图标的结构、菜单必须暴露的内容,以及保持与 macOS 一致的视觉规则。
+---
+
+Kumo 使用 AppKit `NSStatusItem` 作为持久菜单栏图标。不要在其旁边添加 SwiftUI
+`MenuBarExtra` scene; 这会创建重复图标并限制对菜单的运行时控制。
+
+## 结构
+
+- `KumoAppDelegate` 拥有 `KumoStatusItemController` 的生命周期。
+- `KumoStatusItemController` 拥有 `NSStatusItem`、状态图标和 `NSMenuDelegate`。
+- `KumoAppContext` 桥接 SwiftUI 拥有的 `KumoAppStore`、主窗口操作和设置操作到
+  AppKit 回调。
+
+## 菜单需求
+
+菜单应在打开前重建,以便 checked 状态和 enabled 状态反映当前运行时数据。
+保持这些顶层操作可用:
+
+- Open Kumo
+- Start / Stop Kumo
+- Outbound Mode 子菜单,带 Rule / Global / Direct 勾选标记
+- System Proxy toggle,带勾选标记
+- Profiles 子菜单
+- Proxy Groups 子菜单
+- Refresh
+- Settings
+- About Kumo
+- Quit Kumo
+
+对选中的模式、配置、代理和系统代理状态使用原生 `NSMenuItem.state` 勾选标记。
+保持禁用的空状态项简洁,如 "No profiles" 或 "No proxy groups"。
+
+## 视觉需求
+
+使用模板状态图标,以便 macOS 可以为浅色模式、深色模式和菜单栏对比度自适应它。
+运行时状态可以通过状态图标符号、tooltip 和菜单状态行表达,而非彩色自定义
+ artwork。

@@ -1,0 +1,66 @@
+---
+title: Sparkle 功能对等
+description: Kumo 与其参考 Sparkle 实现在核心、运行时、控制器、系统代理、Sub-Store 和 UI 表面的逐能力比较。
+---
+
+Kumo 将 Sparkle 作为产品能力参考进行追踪,而非作为 Electron 实现目标。
+目标是在保持 Kumo 原生 macOS 的同时,在 Mihomo 控制、系统集成、诊断、更新和
+备份工作流方面达到等效覆盖。
+
+## 状态图例
+
+- `implemented`: 通过共享的 `KumoCoreKit` 行为可用。
+- `partial`: 可见或持久化表面存在,但对等不完整。
+- `planned`: 尚无完整实现,但架构已为它预留位置。
+- `deferred`: 有意推迟到前置条件稳定后。
+
+## 能力矩阵
+
+| 区域 | 能力 | Kumo 状态 | 主要 Kumo 所有者 | 验收点 |
+| --- | --- | --- | --- | --- |
+| Core | 本地 Mihomo 进程启动/停止/重启 | implemented | `CoreSupervisor` | `kumo start --json`、`kumo stop --json` 和 stale PID 恢复工作。 |
+| Core | 托管 Mihomo 核心安装 | partial | `CoreInstaller` | Stable 和 preview 频道可以安装、验证、缓存和报告版本。 |
+| Core | 启动就绪状态 | partial | `CoreSupervisor` | UI 可以区分 launched、controller ready、providers ready 和 failed。 |
+| Core | 带超时升级的优雅关闭 | implemented | `CoreSupervisor` | Stop 尝试优雅终止后才 force kill,使用 PID 文件回退,并持久化失败。 |
+| Runtime | 结构化运行时配置合并 | implemented | `RuntimeConfigBuilder` | 配置、覆写规则和 Kumo 拥有的键以确定性优先级合并。 |
+| Runtime | 配置清理和规范化 | planned | `RuntimeConfigBuilder` | 空/默认 Mihomo 字段在写入运行时 YAML 前被移除。 |
+| Profiles | 本地配置导入和编辑 | implemented | `ProfileRepository` | 本地 YAML 可以安全导入、编辑、选择和删除。 |
+| Profiles | 远程配置刷新 | implemented | `ProfileRepository` | 远程订阅手动刷新和在到期间隔时刷新。 |
+| Profiles | 订阅元数据保留 | partial | `ProfileRepository` | Headers 持久化名称、主页 URL、更新间隔、用户信息、UA 和指纹。 |
+| Overrides | 有序 YAML 覆写规则 | partial | `OverrideRepository` | 全局和配置作用域 YAML 覆写规则按文档顺序应用。 |
+| Overrides | JavaScript 转换 | deferred | `OverrideRepository` | 在启用前需要经过审查的沙箱策略。 |
+| Controller | 代理组和选择 | implemented | `MihomoControllerClient` | 组加载、过滤隐藏条目并允许节点选择。 |
+| Controller | 出站模式切换 | implemented | `KumoAppStore` / `MihomoControllerClient` | 规则/全局/直连变更在本地持久化,PATCH Mihomo `/configs`,关闭现有连接,并在不阻塞 Start / Stop 工具栏操作的情况下刷新代理组。 |
+| Controller | 规则、连接、提供者、Geo 更新 | partial | `MihomoControllerClient` | Inspect 和 Configure 页面暴露控制器操作,无需直接 UI 客户端。 |
+| Controller | 流量、内存、日志和生命周期事件 | partial | `MihomoControllerClient` | 事件流使用有界缓存并承受短暂断开。 |
+| CLI | 稳定的 Agent 友好 JSON 命令 | partial | `KumoCLI` | 每条命令都有 `--json`、稳定的信封和确定的退出码。 |
+| System Proxy | 手动 macOS 系统代理 | implemented | `SystemProxyController` | Dry-run 和真实命令配置 web、secure web 和 SOCKS 代理。 |
+| System Proxy | 活跃服务检测和恢复 | planned | `SystemProxyController` | Kumo 检测网络服务并在禁用时恢复先前代理设置。 |
+| System Proxy | PAC 托管和 guard | planned | `SystemProxyController` / `KumoService` | PAC 和自动恢复仅在服务模式支持存在后运行。 |
+| Service | 特权服务后端 | planned | `KumoService` | GUI 和 CLI 可以在不更改公共命令的情况下切换后端。 |
+| Service | 签名本地服务请求 | planned | `KumoService` | 请求使用密钥材料、时间戳、nonce 和体哈希。 |
+| Sub-Store | 持久化配置 | implemented | `SubStoreManager` | 状态、本地资源版本、后端端口、cron 设置、代理模式、LAN 模式和自定义后端设置持久化。 |
+| Sub-Store | 本地生命周期管理 | implemented | `SubStoreManager` / `SubStoreSupervisor` | 捆绑的 Node sidecar + `sub-store.bundle.js` 按需准备;Kumo 启动、停止和重启后端。 |
+| Sub-Store | 原生管理 UI | implemented | `KumoApp.SubStoreView` / `SubStoreClient` | SwiftUI 表面通过 HTTP 与后端通信,显示订阅、集合、文件、模块、产物、归档、token、设置和日志。 |
+| Resources | 代理/规则提供者管理 | partial | `MihomoControllerClient` | 提供者在 Configure 中列出、更新并显示有用的元数据。 |
+| Diagnostics | 连接和日志检查 | partial | `MihomoControllerClient` / `KumoAppStore` | 活跃/已关闭连接、关闭操作、过滤和实时日志可用。 |
+| Backup | 导出/导入本地状态 | planned | `KumoCoreKit` | 配置、覆写规则、设置、Sub-Store 状态和服务设置往返。 |
+| Updates | 应用更新频道和安装器 | planned | 分发层 | Stable/beta 应用更新验证签名并协调核心/代理状态。 |
+| UI | 原生 Daily / Inspect / Configure IA | implemented | `KumoApp` | 高级功能保持为日常连接流程的次要位置。 |
+| UI | Sparkle 级别的高级控件 | partial | `KumoAppStore` / Views | 代理、连接、规则、日志、配置和设置达到功能对等。 |
+| Quality | CoreKit 单元测试 | partial | `KumoCoreTests` | 运行时、配置、覆写规则、状态、代理和控制器映射测试通过。 |
+| Quality | CLI、服务和 UI store 测试 | planned | Tests | JSON 快照、服务认证/回退和 store 状态转换被覆盖。 |
+
+## 实现顺序
+
+1. 稳定结构化配置流水线和控制器契约测试。
+2. 扩展运行时监管和事件流,同时保持本地进程模式为默认。
+3. 在特权服务安装之前添加系统代理恢复和服务就绪抽象。
+4. 在稳定的控制层之上构建 Sub-Store、备份、更新和高级 UI 功能。
+5. 通过 CLI 快照、服务测试、迁移测试和手动 QA 检查清单提高发布质量。
+
+## 非目标
+
+- 不移植 Sparkle 的 Electron 渲染器或巨型 IPC 表面。
+- 在沙箱化和审计行为被明确设计之前,不添加 JavaScript 覆写规则。
+- 在服务模式就绪之前,不将 TUN、PAC guard 或特权网络作为主要的日常流程的一部分。

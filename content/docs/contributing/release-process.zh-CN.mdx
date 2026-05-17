@@ -1,0 +1,106 @@
+---
+title: 发布流程
+description: Kumo 的发布如何构建、签名并交付给用户。
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+本页在问"我的修复什么时候发货?"时很有用。
+
+## 频道
+
+Kumo 从单个仓库发布两个频道:
+
+| 频道 | 受众 | 清单 |
+| --- | --- | --- |
+| **stable** | 默认。在确认发布时更新。 | `https://github.com/ProjectKumo/KumoApp/releases/latest/download/latest.yml` |
+| **beta** | 可选。更新更频繁,过滤较少。 | `https://github.com/ProjectKumo/KumoApp/releases/download/pre-release/latest.yml` |
+
+用户在 **设置 → 更新 → 更新频道** 中选择频道。
+
+## 发布包含什么
+
+每次发布包含:
+
+- 一份来自 Release 配置 `.app` 的公证 **DMG**。
+- 一份 `latest.yml` **清单**,包含 `version`、`channel`、`downloadURL`、
+  `assetName`、`sha256` 和 `releaseNotes`。
+- 一个链接 DMG 并粘贴发布说明的 **GitHub Release** 页面。
+
+DMG 通过以下命令构建:
+
+```bash
+make release-dmg VERSION=0.0.4
+```
+
+这会调用 `make app-release`,然后调用
+`Scripts/make_release_artifacts.sh`。脚本:
+
+1. 将 `Kumo.app` 压缩到 DMG 中。
+2. 计算 DMG 的 SHA-256。
+3. 用该 SHA-256 写入 `build/release/latest.yml`。
+
+然后将产物上传到 GitHub Release。stable 发布标记为 `vX.Y.Z`。
+beta 标记为 `pre-release`(移动标签)。
+
+## 版本号
+
+我们使用 `MAJOR.MINOR.PATCH`(类 semver):
+
+- **PATCH** 用于 bug 修复和小调整。
+- **MINOR** 用于不改动 JSON 契约的新功能。
+- **MAJOR** 保留给 CLI 信封或状态模式的破坏性变更。
+
+构建号每次 CI 构建时递增;用户通常看不到它,但 `kumo --version` 包含它
+用于诊断。
+
+## 用户看到什么
+
+运行中的 Kumo 每五分钟询问频道清单是否有新版本。当有新版本时:
+
+1. 一条原生 macOS 通知出现,包含
+   **立即安装 / 稍后提醒 / 立即重启**。
+2. 下载写入
+   `~/Library/Application Support/Kumo/updates/downloads/`。
+3. 分离式安装器(`app-update-installer.log`)挂载 DMG,将 `Kumo.app` 覆盖到
+   当前安装之上,并重新启动。
+4. 清单中的 SHA-256 在安装器调用前与下载的工件进行校验。不匹配会中止
+   更新。
+
+自动安装要求当前 `Kumo.app` 的父目录可写。如果不是(整机安装、锁定目录),
+应用会报告清晰的错误并提供 DMG 链接供用户手动安装。
+
+## 发布流程
+
+维护者流程:
+
+1. 将所有变更合入 `main`。
+2. 更新 `CHANGELOG.md`(或发布说明草稿)。
+3. `make release-dmg VERSION=X.Y.Z`。
+4. 通过现有 CI 工作流签名并公证。
+5. 创建 GitHub Release,附加 DMG 和 `latest.yml`,粘贴说明。
+6. stable 确保 `latest` 标签指向新标签。beta 将 `pre-release` 标签强制前移。
+7. 验证用户收到提示 — 在测试 Mac 上安装上一版 stable,等待五分钟,确认
+   通知出现。
+
+损坏的发布清单是最糟糕的 bug。在宣布前始终在真实机器上端到端验证更新
+流程。
+
+## 托管私有源
+
+清单格式在[自动更新](/docs/advanced/auto-updates)中有文档说明。任何能通过
+HTTPS 提供静态文件的主机都可以用于私有源: S3、R2、GitHub Pages、nginx 等。
+
+## 什么不会随发布一起出货
+
+- **Mihomo 二进制文件。** Kumo 按需下载托管的 Mihomo。我们不会在 DMG 中
+  冻结 Mihomo 版本。
+- **用户配置或覆写规则。** 发布是无状态的。`~/Library/Application Support/Kumo/`
+  中的本地状态会跨升级保留。
+- **用户目录中的 Agent 技能文件。** 捆绑的技能内容在应用内部;用户通过
+  设置 → Agent 技能显式安装它。
+
+<Callout type="info">
+如果你的修复需要在下次 stable 之前发货,在 PR 中说明。当情况需要时,我们
+可以 cherry-pick 到 patch 发布中。
+</Callout>

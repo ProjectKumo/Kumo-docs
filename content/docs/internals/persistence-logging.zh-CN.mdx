@@ -1,0 +1,209 @@
+---
+title: 持久化与日志
+description: Kumo 在磁盘上保持状态的位置 — Application Support 布局、状态文件、偏好设置、备份、更新缓存和每个日志通道。
+---
+
+## Application Support 目录
+
+Kumo 将本地状态存储在:
+
+```text
+~/Library/Application Support/Kumo/
+```
+
+`KumoPaths` 集中所有路径,因此 GUI、CLI、测试和未来服务代码使用相同的布局。
+
+## 目录布局
+
+```text
+Kumo/
+  profiles/
+    default.yaml
+    profiles-metadata.json
+    current.txt
+  overrides/
+    overrides.json
+    files/
+  work/
+    config.yaml
+  logs/
+    core.log
+    substore.log
+  cores/
+    mihomo
+  substore/
+    status.json
+    backend/
+    frontend/
+  state.json
+  preferences.json
+```
+
+## 备份格式
+
+Kumo 可以导出一个包含以下内容的目录备份:
+
+- `manifest.json`
+- `profiles/`
+- `overrides/`
+- `substore/`
+- `state.json`
+
+第一版备份格式基于目录而非 zip,以便保持透明、可测试且便于 Agent 检查。
+未来的 UI 可以将相同的 manifest 包装为压缩归档或同步到 WebDAV,而不改变
+CoreKit 导入/导出契约。
+
+## 状态文件
+
+`state.json` 存储 `CoreStatus`:
+
+- 核心运行状态
+- 进程标识符
+- 出站模式
+- 控制器端点
+- mixed 代理端口
+- 系统代理状态(包括 PAC `mode` 和 `pacScript`)
+- 受控运行时设置,包括 TUN stack、路由、DNS、路由排除、MTU 和 ICMP
+  forwarding 偏好
+- 最后状态消息
+
+这使 CLI 和 GUI 可以在 v1 中共享状态而无需服务。运行时设置模型必须对缺失字段
+使用默认值解码,以便应用更新可以添加新的 TUN 控件而不使现有 `state.json` 失效。
+
+## 用户偏好设置
+
+`preferences.json` 存储 `UserPreferences`(不影响 Mihomo 运行时的 UI 生命周期偏好):
+
+- `launchAtLogin` — 由 `KumoAppDelegate` 与 `SMAppService.mainApp` 同步。
+- `hideMenuBarIcon` — 为菜单栏可见性偏好持久化;Kumo 现在使用 AppKit
+  `NSStatusItem`,因此当设置开关重新暴露时,运行时可见性可以通过状态项
+  控制器连接。
+- `quitOnLastWindowClose` — 由
+  `applicationShouldTerminateAfterLastWindowClosed` 读取。
+- `updateChannel` (`stable` / `beta`) 和 `updateManifestURL` — 为
+  `AppUpdateManager.checkForUpdate(...)` 提供源。空白 `updateManifestURL` 使用
+  Kumo 的默认 GitHub Releases 源;值会覆盖它用于本地测试或私有分发。
+
+解码回退到默认值,因此缺失或损坏的文件永远不会阻止启动。
+
+## 应用更新
+
+应用更新下载缓存于:
+
+```text
+updates/downloads/
+```
+
+分离式 DMG 安装器将其日志写入:
+
+```text
+logs/app-update-installer.log
+```
+
+缓存是可丢弃的。发布元数据和产物规则在
+[发布管理](/docs/internals/release-management) 中有文档说明。
+
+## Sub-Store
+
+`substore/status.json` (`SubStoreStatus`) 存储启用标志、自定义后端 URL、host/LAN
+模式、代理模式、cron 设置、资源版本、复制的 bundle 路径和配置的端口。
+
+捆绑的 Sub-Store 资源从 `KumoCoreKit` 复制到:
+
+```text
+substore/resources/
+  manifest.json
+  node/bin/node
+  backend/sub-store.bundle.js
+```
+
+Sub-Store 运行时数据保存在 `substore/data/` 下,匹配
+`SUB_STORE_DATA_BASE_PATH`。临时暂存工作属于 `substore/temp/`。没有捆绑的
+web 前端: Kumo 的 SwiftUI Sub-Store 表面直接通过 HTTP 与本地后端通信。
+
+`SubStoreSupervisor` 用 `sub-store.bundle.js` 和 Sparkle 兼容环境变量启动捆绑的
+Node sidecar。停止 Sub-Store 会终止后端进程并关闭日志句柄。
+
+## 运行时配置
+
+生成的 Mihomo 运行时配置写入:
+
+```text
+work/config.yaml
+```
+
+Mihomo 以 work 目录启动,因此读取生成的配置。
+
+## 日志
+
+核心 stdout 和 stderr 追加到:
+
+```text
+logs/core.log
+```
+
+Sub-Store 后端 stdout 和 stderr 追加到:
+
+```text
+logs/substore.log
+```
+
+每次 Sub-Store 启动写入一个标题行(`[ISO timestamp] starting <executable> <args>`),
+以便日志读者可以轻松分割会话。
+
+主 UI 故意不在 Overview 屏幕上暴露完整日志。完整日志检查属于 `Inspect` 下的
+`Logs` 目的地。`Sub-Store` 设置页面暴露一个 "View Logs" 按钮,在用户的文本
+编辑器中打开 `logs/substore.log`。
+
+实时 Mihomo 日志应被视为带有界内存缓存的事件流。本地 `core.log` 文件保留为
+回退和诊断产物。
+
+CLI 有独立的调试日志通道,位于:
+
+```text
+logs/cli/
+```
+
+每次 `kumo` 调用可能创建一个 `*-kumo-debug-0.log` 文件,包含命令级诊断。
+`--logs-max <count>` 控制保留,`--logs-max=0` 为敏感环境禁用 CLI 调试日志文件。
+`--logs-dir <path>` 可以将这些文件重定向用于临时诊断。
+
+`kumo --timing` 在同一目录中写入进程专属的 `*-kumo-timing.json` 文件。
+Timing 文件用于性能诊断,不应与运行时事件流混合。
+
+CLI 终端输出遵循 npm 风格日志级别:
+
+```text
+silent < error < warn < notice < http < info < verbose < silly
+```
+
+正常命令结果进入 stdout。日志、警告、进度摘要和调试日志路径进入 stderr。
+`--json` 保持 stdout 仅为纯 JSON。
+
+在写入终端或文件日志前,CLI 诊断会对控制器密钥、授权头、basic auth 密码、
+订阅 token 和 token-like 查询参数进行脱敏。脱敏是安全网,不是将日志不经审查
+粘贴到公共场所的理由。
+
+## 覆写规则
+
+覆写规则计划放在:
+
+```text
+overrides/
+  overrides.json
+  files/
+    <id>.yaml
+    <id>.js
+    <id>.log
+```
+
+YAML 覆写规则在 Kumo 控制的运行时设置之前应用。JavaScript 覆写规则需要经过
+审查的沙箱才能启用。
+
+## 未来工作
+
+- 日志轮转。
+- 添加独立的应用和服务日志。
+- 为 Agent 添加结构化 JSONL 事件日志。
+- 在分享诊断前对日志进行隐私审查。
+- 添加日志轮转和 Sub-Store 日志保留控制。

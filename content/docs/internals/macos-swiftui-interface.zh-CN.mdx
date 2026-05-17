@@ -1,0 +1,267 @@
+---
+title: macOS SwiftUI 界面
+description: KumoApp 的 scene 结构、导航模型、工具栏行为、设置、状态项、App Intents,以及将日常流程放在首位的 UI 约束。
+---
+
+## 范围
+
+`KumoApp` 是原生 macOS 前端。它拥有窗口、菜单、设置、菜单栏状态项、
+App Intents 和 SwiftUI 状态协调。它不拥有 Mihomo 生命周期或配置生成;
+这些职责在 `KumoCoreKit` 中。
+
+## App Scene 结构
+
+应用使用:
+
+- `WindowGroup(id: "main")` 用于主可调整大小 Mac 窗口。
+- `Window("About Kumo", id: "about")` 用于 App 菜单和状态项菜单共享的自定义
+  关于窗口。
+- `Settings` 用于通过标准应用菜单访问的偏好设置(通用 / 偏好设置 / 更新标签)。
+- `KumoStatusItemController` 用于持久菜单栏图标和原生快速菜单。它使用
+  `NSStatusItem`,以便 Kumo 可以动态重建菜单内容并避免 SwiftUI `MenuBarExtra`
+  可见性限制。
+- `CommandMenu("Control")` 用于键盘可访问的 Kumo 命令。
+- `CommandGroup(after: .toolbar)` 暴露 `Toggle Sidebar` (Cmd+Ctrl+S)。
+- `CommandMenu("Navigate")` 用于键盘可访问跳转到主要 Daily 和 Inspect
+  目的地,而不将导航状态移入 `KumoCoreKit`。
+- `@NSApplicationDelegateAdaptor(KumoAppDelegate.self)` 桥接仅 AppKit 行为
+  (状态项设置、Services 菜单、Spotlight handoff、Dock badge 定时器、
+  `SMAppService.mainApp` 同步、`applicationShouldTerminateAfterLastWindowClosed`)。
+- `UNUserNotificationCenter` 集成用于更新通知: 五分钟运行时发布清单轮询、
+  更新可用提示、安装进度阶段更新,以及路由回 `KumoAppStore` 的可操作按钮。
+
+`KumoAppContext.shared` 是一个微小的 `@MainActor` 单例,将实时的
+`KumoAppStore` 和 SwiftUI 窗口打开操作暴露给 AppDelegate、状态项、App Intents
+和 Services 回调(它们都不在 SwiftUI 视图树内)。
+
+主窗口保持标准 macOS chrome、统一工具栏和合理的最低尺寸。
+
+## 视图结构
+
+`ContentView` 使用 `NavigationSplitView`,侧边栏分为三个部分:
+
+- Daily: `OverviewView`、`ProfilesView`、`ProxiesView`
+- Inspect: `ConnectionsView`、`LogsView`、`RulesView`
+- Configure: `CoreView`、`SystemProxyView`、`DNSView`、`TunView`、
+  `SnifferView`、`ResourcesView`、`OverridesView`、`SubStoreView`、
+  `AgentSkillsView`
+
+`KumoAppStore` 是一个 `@Observable` 对象,桥接 SwiftUI 状态到 `KumoCoreKit`。
+视图应调用 store 方法而非直接构造控制器客户端。
+
+工具栏模式切换器镜像 Sparkle 的出站模式行为: 切换规则/全局/直连会持久化
+受控模式,patch Mihomo 运行中的 `/configs` 模式,关闭现有连接,并刷新代理组。
+这使用专用的 `isSwitchingMode` 状态而非全局 `isLoading` 标志,因此模式-only
+变更期间 Start / Stop 工具栏操作不会闪烁禁用。
+
+Inspect 页面将工具栏搜索附加到页面容器,而非仅附加到已填充的 `Table` / `List`
+分支。无匹配状态不得移除搜索字段,因为用户需要相同的工具栏控件来清除或
+编辑查询。
+Connections 表格在 Mihomo 返回 `metadata.processPath` 时在 Process 列显示进程
+图标。图标通过 `NSWorkspace` 从包含的 `.app` / `.xpc` bundle 解析并在 SwiftUI
+视图层缓存;共享的 `ConnectionEntry` 模型携带进程路径,但 `KumoCoreKit` 不依赖
+AppKit。
+
+Overview 是双面板布局(`HSplitView`),灵感来自单窗口工具应用。左面板是
+按 `ProxyGroup` 分组的可搜索代理节点列表;每行显示从节点 `name` 推断的国家
+国旗加延迟 pill(绿色 < 300 ms,橙色否则,红色超时,`—` 未知)。点击一行通过
+`KumoAppStore.selectProxy(group:proxy:)` 提交,每组的 `speedometer` 按钮触发
+`testDelay(for:)`。在侧边栏搜索字段中输入会过滤节点名并强制展开每个匹配组,
+因此用户无需点击两次即可看到命中结果。
+
+国家国旗分三层解析,顺序如下:
+
+1. **名称解析** (`KumoCoreKit.ProxyCountry`) — 一个纯值类型辅助器,首先返回
+   已嵌入名称中的任何 flag emoji,然后回退到两阶段关键词匹配。Phase 1 扫描
+   长关键词(ICU 本地化区域名来自 `en_US / zh_Hans / zh_Hant / ja_JP`,加上一个
+    tiny `manualAliases` 列表处理 ICU 不返回的形式如 `USA / UK / 香港 / 狮城`)。
+   Phase 2 将名称分割为 ASCII 字母 token 并解析第一个匹配 ISO 3166-1 alpha-2
+   代码的 token,对 `us-la-02` 等歧义名称消解为 `US`。
+2. **GeoIP 回退** (`ProxyNode.detectedCountry`) — 当名称解析无结果时,UI 异步
+   渲染由 `KumoCoreKit.ProxyGeoLookup` 填充的国家代码。store 通过
+   `ProfileNodeParser` 读取当前配置的 YAML 以获取 `[name → server]`,然后 lookup
+   actor 通过 `ipwho.is`(HTTPS,接受 IP 和主机名)将每个 server 解析为国家代码,
+   结果缓存到 `~/Library/Application Support/Kumo/proxy-geo-cache.json`,30 天 TTL,
+   5 分钟失败冷却。并发请求去重合并,因此一份有数千个节点但只共享 50 个唯一
+   server 的配置只会发起 50 次 HTTP 调用,而非数千次。
+3. **`globe` SF Symbol 占位符** — 仅当两层都为空时显示。我们从不虚构国家。
+
+`ProxyCountry` 在 `KumoCoreKit` 中,因此 CLI 或测试可以复用相同的启发式;
+单元覆盖位于 `Tests/KumoCoreTests/ProxyCountryTests.swift`、
+`ProfileNodeParserTests.swift` 和 `ProxyGeoLookupTests.swift`,涵盖嵌入 flag
+透传、ISO / 英文 / CJK 关键词命中、ASCII 边界误报、Phase 2 token 消解、
+YAML 边界情况,以及 lookup actor 的缓存 + 冷却 + 去重行为。
+
+当核心停止时,Overview 侧边栏不会折叠为空状态。它渲染用户 `proxy-groups:` 的
+只读预览,由 `ProfileNodeParser.parseProxyGroups(yaml:)` 离线解析为
+`KumoAppStore.profilePreviewGroups`。预览在 `refreshProfiles()` 和
+`loadProxyGroups()` 后刷新,以与选定配置保持一致。侧边栏将行暗淡到约 55%
+不透明度并禁用行点击、上下文菜单和每组 `speedometer` 操作;国旗继续从
+`ProxyCountry` 加任何缓存的 `detectedCountry` lookup 解析。选择状态在预览中
+故意不显示,因为 mihomo 在启动时决定实际选择(保存的选择、URLTest / Fallback
+组类型),显示 YAML 默认值会误导。核心过渡到 `running` 的时刻,侧边栏无缝
+切换为来自 `/proxies` 的实时 `proxyGroups`,两者都按
+`name.localizedCaseInsensitiveCompare` 排序,因此不会重新排列行。
+
+停止状态不再以内嵌 banner 形式呈现 — 工具栏 Start / Stop 按钮、菜单栏状态项
+和右侧面板上的卡片(零流量、配置元数据仍可见)已经传达了该信息。失败则
+会升级: `KumoAppStore.startCore` / `stopCore` 通过
+`AppNotificationCoordinator`(`postCoreStartFailed(error:)` /
+`postCoreStopFailed(error:)`,类别 `CORE_STATE`) 发布 macOS 系统通知,以便用户
+即使主窗口被遮挡时也能注意到。成功的 start / stop 不会发通知 — UI 已经反映它。
+
+右面板堆叠四张 Liquid Glass 卡片,使用 `kumoGlassCard`。Start / stop 和模式选择器
+在这里有意不重复,因为工具栏已经拥有它们:
+
+- **Profile** 卡片,显示当前配置名、`sourceDescription`、种类 capsule
+  (`Local` / `Remote` / `Inline`,`isSubStoreManaged` 时加 `Sub-Store`)、
+  相对时间 `updatedAt`、自动更新间隔,以及 — 对于报告 `subscriptionUserInfo`
+  的远程订阅 — 已用/总量 `ProgressView` 加可选过期日期。底行暴露
+  `Refresh` 按钮调用 `refreshProfile(_:)` 和通过 `onNavigate(.profiles)` 深链到
+  Profiles 目的地。
+- **Traffic** 卡片,带垂直 `↑ Upload` / `↓ Download` 行,源为
+  `KumoAppStore.trafficSnapshot`,由控制器 `/traffic` WebSocket 提供。停止时
+  读取为两行都是 `0 KB/s` — 一个平静的信号表示没有流量在流动。卡片可折叠:
+  点击头部展开一个 80pt 高的 `Charts.AreaMark` sparkline,显示过去 60 秒的
+  合并吞吐量(sparkle 风格 — 单调曲线、垂直强调色渐变、无轴/图例)。图表读取
+  自 `KumoAppStore.trafficHistory`,一个滚动 60 样本缓冲区,在现有
+  `startTrafficStream()` snapshot handler 中追加,并在 `stopTrafficStream()` /
+  `stopCore()` 时清除。缓冲区为空时(本会话核心尚未运行)展开区域显示
+  "Start Kumo to see traffic history" 占位符,避免卡片弹出。
+- **System Proxy** 卡片,直接暴露主 `Toggle`(`setSystemProxyEnabled`),显示
+  endpoint、mode 和来自 `status.systemProxySettings` 的网络服务,并深链到
+  Configure 页面用于分阶段编辑。
+- **TUN** 卡片,带主 `Toggle`(`setTunEnabled`)、来自
+  `status.runtimeSettings.tun` 的 stack / auto-route 摘要、存在时的 `tunStatus`
+  最后错误,以及相同的深链 affordance。
+
+详细的分阶段编辑表单仍位于 `SystemProxyView` 和 `TunView`(见 Configure)。
+Overview 仅暴露即时启用开关,因此日常流程与 start、stop、模式切换、系统代理
+和 TUN 只差一次点击。
+
+Configure 视图可能从小设置表面开始,但用户可见控件必须对应共享的
+`KumoCoreKit` 行为。不要添加绕过运行时构建器、状态存储或控制器 facade 的
+SwiftUI-only 设置。
+面向系统的配置表单如 Core 运行时设置和 System Proxy 设置应在本地 SwiftUI
+状态中暂存编辑,并通过显式 Apply 操作提交。这避免将部分输入的端口、主机或
+网络服务名写入共享控制器层。
+TUN 设置页面遵循相同的模式处理 stack、路由、MTU、DNS hijack、DNS resolver、
+ICMP forwarding 和 route-exclude 编辑。TUN 启用开关仍然是即时运行时操作,
+而暂存的高级设置通过 `KumoCoreKit.applyTunSettings` 应用;如果 Mihomo 正在运行,
+Kumo 会重启核心,使生成的运行时 YAML 和实际 TUN 接口状态与表单匹配。
+
+`SubStoreView` 是一个完全原生的 SwiftUI 表面,通过 HTTP 与捆绑的 Sub-Store
+后端通信。当后端可达时,视图显示一个细工具栏,带 `Subscriptions`/`Collections`
+分段选择器、一个溢出 `⋯` 菜单(高级页面、重启、停止、打开日志)和一个后端
+连接设置 popover。两个主要部分各自渲染自己的列表-详情布局。高级用户表面
+(Files、Modules、Artifacts、Archives、Share Tokens、Server Settings、Backend Logs)
+按需以 sheet 形式从溢出菜单启动,而非永久存在于侧边栏中,因此默认屏幕保持
+聚焦在订阅上。Sub-Store 数据缓存在专用的 `@Observable` `SubStoreStore` 中,
+因此更新不会使应用其余部分失效。没有嵌入 web view: 管理完全在 SwiftUI 中,
+捆绑的 Node sidecar 继续服务 JSON API。当后端未运行(或资源尚未安装)时,
+`SubStoreView` 回退到 `ContentUnavailableView` 并附带适当的 Start/Prepare 操作,
+因此用户永远不会看到空的管理 chrome。
+
+`AgentSkillsView` 将 Kumo 捆绑的 `kumo-cli` Agent Skill 安装到支持的编码 Agent
+技能目录中。目标列表、支持的作用域、目标路径、安装状态和覆盖规则来自
+`KumoCoreKit.AgentSkillsInstaller`,与 `kumo skills` 匹配。
+
+## Liquid Glass 使用
+
+Liquid Glass 谨慎使用:
+
+- 状态卡片
+- 交互式代理 chip
+- 主分组控件
+
+实现为旧版 macOS 提供 fallback 材质背景。交互式 glass 仅用于执行操作的
+控件。
+
+`KumoGlassSurfaceModifier` 始终传递 `tint: Color`(默认 `.clear`),以便 SwiftUI
+可以在状态变化时插值悬停/选择色调,而无需重建 modifier 链。
+
+Sub-Store 遵循相同规则: 后端状态和连接设置卡片使用 glass 表面,而详情面板和
+编辑器 sheet 保持在纯原生材质上,以便高密度列表/详情内容保持可读。
+
+## 设置表面
+
+`SettingsView` 是一个双标签 `TabView`,保留给应用级偏好设置,About 作为单独
+窗口可用。运行时状态属于主窗口和状态项菜单,而非设置窗口:
+
+- **General** — `Open at Login`(由 `SMAppService.mainApp` 驱动)、
+  `Quit when last window closes`(由
+  `applicationShouldTerminateAfterLastWindowClosed` 读取),以及 Setup 部分的
+  `Run Setup Again` 加 `Command Line Tool` 行(安装/移除 `/usr/local/bin/kumo`)。
+- **Updates** — 频道选择器、可选清单 URL 覆盖,以及由 `AppUpdateManager` 支持的
+  GitHub Releases 更新检查。
+- **About Kumo window** — 应用图标、版本/构建、作者 GitHub 链接、项目链接,
+  以及设置使用的相同更新检查状态。
+
+偏好设置通过 `UserPreferencesStore` 持久化到
+`~/Library/Application Support/Kumo/preferences.json`。字段见
+[持久化与日志](/docs/internals/persistence-logging)。
+
+## 首次启动引导
+
+`OnboardingView` 是一个四步 sheet,附加到 `KumoRootView`,由
+`UserPreferences.hasCompletedOnboarding` 控制。它引导用户完成可选 Helper,
+不强制任何一项:
+
+1. **Welcome** — 简短功能摘要;用户可以用 Skip 关闭。
+2. **Command Line Tool** — 调用 `KumoController.cliLinkStatus()` 并提供
+   `Install`(或 `Remove`) `/usr/local/bin/kumo` 符号链接。安装步骤通过
+   `osascript` 触发 macOS 管理员授权提示,因为默认 `/usr/local/bin` 需要
+   提升权限。
+3. **Agent Skill** — 列出每个 `AgentSkillsTarget`,默认全部未选中,并通过
+   `AgentSkillsInstaller` 将捆绑的 Kumo 技能安装到每个选定 Agent 的
+   `~/.<agent>/skills` 目录。
+4. **Done** — 总结已安装的内容并保存
+   `hasCompletedOnboarding = true`,通过 `KumoAppStore.completeOnboarding()`。
+
+设置暴露 `Run Setup Again`(`KumoAppStore.reopenOnboarding()`),因此用户可以
+重新运行流程而无需重置持久化标志。sheet 也是安装 CLI 的首选路径 —
+Kumo 外部创建的直接符号链接仍然会被检测到,但 GUI 步骤是文档化的入口点。
+
+## 辅助功能
+
+所有纯图标控件应有有意义的标签。工具栏使用 `Label`,以便 VoiceOver 和 tooltip
+有清晰的名称。应用还应保留对 start、stop、refresh、模式切换、列表导航、
+过滤和破坏性确认的键盘访问。
+
+`KumoUIComponents.swift` 暴露 `kumoSubtleBackground(in:)` 和
+`kumoAdaptiveTextWeight(...)` 辅助函数,从环境中读取 `colorSchemeContrast` 和
+`legibilityWeight`,以便自定义 hairline / pill 背景 / 非标准字重仍然响应用户的
+增强对比度和粗体文本偏好。
+
+## 设计约束
+
+- 避免密集仪表盘。
+- 将 Inspect 和 Configure 面板保持为 Daily 流程的次要位置。
+- 将目的地标题保留在统一工具栏 / 导航 chrome 中;不要重复为大的页内标题。
+- 优先使用系统字体、语义颜色和标准控件。
+- 保留窗口调整大小和标准红绿灯按钮。
+- 在自定义控件之前,优先使用原生 SwiftUI `Form`、`List`、`Table`、`Menu`、
+  `Picker`、`Toggle`、`PasteButton` 和 `fileImporter`。
+
+## 系统集成钩子
+
+这些集成点都依赖 `make app` 生成的 `.app` bundle,而非 `swift run`:
+
+- **Services 菜单** — `Info.plist` `NSServices` 注册 "Import Profile to Kumo";
+  `KumoAppDelegate.importProfileURL(_:userData:error:)` 消费剪贴板字符串并调用
+  `KumoAppStore.importRemoteProfile(...)`。
+- **Spotlight** — `SpotlightIndexer` 在启动和配置变更后将配置摘要编入默认
+  `CSSearchableIndex`。每个条目使用配置 id 作为 `uniqueIdentifier`,
+  `NSUserActivityTypes` 声明 `io.kumo.KumoApp.openProfile`。点击 Spotlight 结果
+  handoff 调用 `KumoAppContext.handleUserActivity(_:)`,选择匹配的配置。
+- **App Intents** — `KumoIntents.swift` 暴露 Start / Stop / Refresh / SetMode /
+  ToggleSystemProxy intent,通过 `KumoShortcutsProvider` 呈现。
+  `KumoModeChoice` 是 `OutboundMode` 的本地镜像,因为 AppIntents 元数据提取
+  无法看到另一个 SPM 模块中声明的枚举。
+- **Dock badge** — AppDelegate 中的 1 秒定时器将连接数写入
+  `NSApp.dockTile.badgeLabel`。
+- **Notifications** — `AppNotificationCoordinator` 注册更新类别/操作
+  (`Install Now`、`Remind Me Later`、`Restart Now`) 并发布由
+  [应用更新](/docs/internals/app-updates) 中记录的五分钟发布清单轮询提供的
+  本地更新通知。`KumoAppDelegate` 处理通知响应并将操作路由到
+  `KumoAppStore.handleNotificationAction(...)`。

@@ -1,0 +1,124 @@
+---
+title: 仓库结构
+description: Kumo 源码树中各个目录存放的内容。
+---
+
+## 顶层布局
+
+```text
+KumoApp/
+  Sources/                Swift 代码,每个模块一个文件夹
+    KumoCoreKit/          共享领域库(无 SwiftUI)
+    KumoCLI/              `kumo` 可执行文件的薄壳
+    KumoCLIKit/           CLI 命令表面(Argument Parser 命令)
+    KumoApp/              SwiftUI macOS 应用
+    KumoService/          计划中的特权 Helper(服务模式)
+  Tests/
+    KumoCoreTests/        KumoCoreKit 的单元测试
+    KumoCLITests/         CLI 表面的单元测试
+  Resources/              捆绑资源 — 图标、banner 图
+  Assets/                 营销和 README 素材
+  Scripts/                发布脚本、Sub-Store 运行时准备
+  docs/                   工程文档(架构、实现等的技术真相来源,
+                          不是这些用户文档)
+  Makefile                构建 + 测试流程的唯一真相来源
+  Package.swift           SwiftPM manifest
+  project.yml             XcodeGen 项目定义
+  AGENTS.md               Agent 的文案和组件约束
+  README.md               项目概览
+  LICENSE                 AGPL-3.0-only
+```
+
+## 四个模块
+
+Kumo 刻意将职责划分到四个库中。
+
+### `KumoCoreKit`
+
+所有**非 UI** 内容都在这里。
+
+```text
+KumoCoreKit/
+  Models/                 纯数据类型(配置元数据、状态、模式)
+  Configuration/          配置加载、运行时配置生成
+  Runtime/                Mihomo 进程监管、托管核心安装
+  Networking/             Mihomo external-controller HTTP 客户端
+  System/                 基于 networksetup 的系统代理控制器
+  Service/                Sub-Store sidecar 生命周期
+  AgentSkills/            Agent 技能包安装器
+  Support/                路径、状态存储、共享错误
+  Resources/              捆绑的 Sub-Store 运行时、技能内容
+```
+
+`KumoCoreKit` 零 SwiftUI。它是纯 async Swift,用 `Yams` 处理 YAML。
+这种分离使 CLI 成为可能 — 应用和 `kumo` 都调用同一个控制器。
+
+### `KumoCLIKit`
+
+命令表面。基于
+[swift-argument-parser](https://github.com/apple/swift-argument-parser)
+构建。每条 CLI 命令 — `status`、`start`、`mode`、`select`、`profile`、
+`config`、`sysproxy`、`service`、`tun`、`substore`、`skills`、`backup`、
+`doctor` 等 — 都是这里的一个 `ParsableCommand`。
+
+约定是一条命令:
+
+1. 验证输入。
+2. 调用 `KumoCoreKit` 完成实际工作。
+3. 将结果渲染为纯文本或 JSON。
+
+如果在 `KumoCLIKit` 内部需要 `Foundation.URLSession` 或 `Process`,
+该逻辑几乎肯定属于 `KumoCoreKit`。
+
+### `KumoCLI`
+
+一个极小的包装器:实际的可执行目标。它的存在使得库(`KumoCLIKit`)
+可以在不生成进程的情况下进行单元测试。
+
+### `KumoApp`
+
+SwiftUI macOS 应用。使用 `NavigationSplitView`、`Settings` scene、
+AppKit 菜单栏状态项以及标准 SwiftUI 控件。UI 文案规范来自 `AGENTS.md`。
+
+`KumoApp` 直接调用 `KumoCoreKit` — 它不重复任何运行时逻辑。
+
+### `KumoService`
+
+未来的特权 Helper。服务模式发布后将拥有 TUN 控制、受保护的系统代理变更
+以及通过 Unix socket 的签名请求传输。今天可以编译,但在 v1 中尚未做
+有用的工作。
+
+## Scripts
+
+`Scripts/` 存放项目的发布机制。
+
+| 脚本 | 作用 |
+| --- | --- |
+| `prepare_substore_runtime.sh` | 将生成的 Sub-Store Node 运行时下载到 `Sources/KumoCoreKit/Resources/SubStore/`。 |
+| `make_release_artifacts.sh` | 将 Release `.app` 打包为可公证的 DMG 并输出 `latest.yml`。 |
+
+这些通常通过对应的 `make` 目标间接调用。
+
+## 工程文档
+
+`docs/` 文件夹是**Kumo 如何构建**的技术真相来源:
+
+- `docs/product/` — 产品范围和 IA。
+- `docs/interfaces/` — macOS SwiftUI 接口、CLI 表面。
+- `docs/core/` — 控制层、Mihomo 运行时、配置加载。
+- `docs/operations/` — 权限、持久化、发布。
+- `docs/roadmap/` — 服务模式、未来工作。
+- `docs/quality/` — 测试预期。
+- `docs/standards/` — 实现约定。
+
+这些是为参与 Kumo 开发的人编写的。本站上的文档(公开的 `Kumo-docs`)
+是为**使用** Kumo 的人编写的。两者都很重要。
+
+## 仓库中刻意不包含的内容
+
+- **没有 Mihomo 二进制文件。** Kumo 在首次启动时下载它,或你指向一个路径。
+  捆绑 Mihomo 的封闭副本会使 Kumo 的发布节奏依赖于 Mihomo 的。
+- **没有第三方追踪 SDK。** Kumo 不会为分析而回拨。`KumoCoreKit` 中唯一的
+  出站网络调用是你配置的 Mihomo 控制器、配置获取以及(可选的)更新清单。
+- **没有捆绑的密钥。** 任何看起来像凭证的东西都是 bug — 请
+  [报告](/docs/contributing/issues)。

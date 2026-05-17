@@ -1,0 +1,75 @@
+---
+title: 发布管理
+description: 发布频道、latest.yml 清单、DMG 打包,以及构建签名 Kumo.app 用于分发的 make 目标。
+---
+
+Kumo 通过 GitHub Releases 发布 macOS 应用更新。发布产物包括签名的应用 DMG 和
+一个由运行时更新系统消费的小清单。
+
+运行时发现、五分钟异步轮询、本地更新通知、校验和验证和安装器 Helper 行为
+在[应用更新](/docs/internals/app-updates) 中有文档说明。
+
+## 发布频道
+
+- Stable 更新读取
+  `https://github.com/ProjectKumo/KumoApp/releases/latest/download/latest.yml`。
+- Beta 更新读取
+  `https://github.com/ProjectKumo/KumoApp/releases/download/pre-release/latest.yml`。
+- 设置可以覆盖清单 URL 用于开发或私有源。留空以使用默认 GitHub Releases 源。
+
+## 清单格式
+
+`latest.yml` 作为发布资产与 DMG 一起上传。
+
+```yaml
+version: 0.0.1
+channel: stable
+downloadURL: https://github.com/ProjectKumo/KumoApp/releases/download/0.0.1/Kumo-macos-0.0.1-arm64.dmg
+assetName: Kumo-macos-0.0.1-arm64.dmg
+sha256: <64-character-sha256>
+releaseNotes: |
+  See https://github.com/ProjectKumo/KumoApp/releases/tag/0.0.1
+```
+
+应用也接受相同字段作为 JSON 用于本地测试和向后兼容。
+运行时清单契约和自动安装要求在
+[应用更新](/docs/internals/app-updates) 中有文档说明。
+
+## 构建产物
+
+使用发布助手构建 Release `.app`、创建 DMG 并输出 `latest.yml`:
+
+```bash
+make release-dmg VERSION=0.0.1 CHANNEL=stable
+```
+
+`VERSION` 作为 `MARKETING_VERSION` 传递给 Xcode,因此构建的
+`Kumo.app/Contents/Info.plist` 和 `latest.yml` 使用相同的应用版本。
+覆盖 `BUILD_NUMBER` 以设置 `CFBundleVersion`;默认 `1`。
+产物脚本在创建 DMG 前验证构建的应用版本。
+Release 构建还必须包含 `KumoCoreKit` 资源中捆绑的 Sub-Store payload:
+Node sidecar、`sub-store.bundle.js` 和 `manifest.json`。Sub-Store 前端不再
+捆绑;Kumo 的 SwiftUI UI 直接与后端通信。Kumo 不在运行时下载 Sub-Store;
+应用更新是捆绑 Sub-Store 资源的更新渠道。Node sidecar 不在 Git 中跟踪;
+`make app-release` 在调用 Xcode 前运行
+`Scripts/prepare_substore_runtime.sh`,以便生成的运行时存在于资源 bundle 中,
+而无需提交大二进制文件。
+
+DMG 布局为 Finder 安装窗口。`Assets/dmg-background.png` 提供 660×420 纸质背景,
+带手写标签和一支铅笔绘制的小箭头从 `Kumo.app` 指向 `/Applications` 别名。
+
+输出写入 `build/release/`:
+
+- `Kumo-macos-0.0.1-arm64.dmg`
+- `latest.yml`
+
+将两个文件上传到 GitHub Release。Beta 设置 `CHANNEL=beta`;清单指向
+`pre-release` 标签。
+
+## 运行时更新流程
+
+运行时行为见[应用更新](/docs/internals/app-updates)。该文档拥有应用端轮询、
+通知限制、下载缓存和安装器 Helper 细节。
+
+自动替换要求当前应用的父目录可写。如果 Kumo 位于受保护位置,更新流程报告
+清晰错误,用户可以从下载页面手动安装。

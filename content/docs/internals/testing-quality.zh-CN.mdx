@@ -1,0 +1,89 @@
+---
+title: 测试与质量
+description: 当前测试面、验证命令、覆盖缺口、质量规则,以及 Kumo 在发布前期望的手动 QA 检查清单。
+---
+
+## 当前测试
+
+首版测试套件覆盖:
+
+- 运行时配置生成。
+- 核心状态持久化。
+- dry-run 模式下的系统代理命令构造。
+- 带模拟 URL 加载的 Mihomo 控制器响应映射。
+- 备份导出/导入往返。
+- 服务请求签名。
+- CLI 参数解析、JSON 信封稳定性、颜色/日志渲染规则,以及 npm 风格帮助行为。
+
+这些测试针对 `KumoCoreKit`,因为该层携带最重要的共享行为。
+
+## 验证命令
+
+使用:
+
+```bash
+swift build --product kumo
+swift test
+.build/debug/kumo --help
+.build/debug/kumo status --json
+.build/debug/kumo skills install --agent codex --scope global --dry-run --json
+```
+
+不要启动开发服务器。这个项目是 Swift 包,不是 web 应用。
+面向用户的发布检查,优先使用 `Kumo.app/Contents/Helpers/kumo` 处捆绑的 Helper
+和 `/usr/local/bin/kumo` 符号链接,而非 `swift run kumo`。
+
+## 测试策略
+
+优先测试不修改真实系统状态的:
+
+- 使用临时 Application Support 目录。
+- 对系统代理命令使用 dry-run。
+- 在测试实时 Mihomo API 前模拟控制器响应。
+- 避免需要真实网络订阅的测试。
+
+## 需要更多覆盖的区域
+
+- 配置导入和远程刷新错误。
+- 缺失核心路径错误。
+- UI store 行为。
+- 未来的 Unix socket 传输。
+- 从快照精确恢复系统代理。
+- 应用更新清单和校验和流程。
+
+## 质量规则
+
+- 保持 `KumoCoreKit` 独立于 SwiftUI。
+- 保持命令执行隔离。
+- 使用显式错误而非通用失败。
+- 将高级功能放在高级 UI 之后。
+- 优先使用按领域职责分组的小文件。
+
+## 手动 QA 检查清单
+
+- `kumo status --json` 返回有效 JSON。
+- `kumo --help`、`kumo -l`、`kumo help json` 和 `kumo completion zsh` 返回
+  npm 风格可发现性输出。
+- `kumo status --color never` 不包含 ANSI 转义码,且 `kumo status --json`
+  即使提供 `--color always` 也保持纯 JSON。
+- `kumo status --silent` 成功且无成功文本输出。
+- `kumo doctor --timing` 写入 timing 诊断而不污染 JSON 输出。
+- `kumo logs cli --limit 5` 和 `kumo logs clean --dry-run --json` 操作 CLI
+  调试日志而不触碰运行时日志。
+- 缺失 Mihomo 核心显示清晰错误。
+- 空配置仍生成安全的直连配置。
+- 系统代理 dry-run 打印预期命令。
+- SwiftUI 窗口以 Overview 选中状态打开。
+- Settings 用 Cmd+, 打开。
+- Inspect 搜索字段在查询返回无匹配时仍然可用。
+- Core 运行时和 System Proxy 设置仅在用户应用暂存编辑后才提交。
+- TUN Helper 卸载在移除服务前请求确认。
+- 菜单栏状态项暴露 start、stop、模式切换、refresh、profiles、proxy groups
+  和系统代理控件。
+- 应用更新在未设置清单覆盖时检查默认 GitHub Releases 源。
+- 应用更新 DMG 下载在 SHA-256 不匹配时失败关闭,并在当前应用位置不可写时
+  报告清晰错误。
+- `kumo doctor --json` 报告状态、配置和核心候选信息。
+- `kumo backup export <path> --json` 创建 manifest 支持的备份目录。
+- `kumo substore status --json` 报告启用状态、前端/后端运行时状态、资源版本
+  和本地 URL,无需启动开发服务器。

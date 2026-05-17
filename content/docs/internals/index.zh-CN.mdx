@@ -1,0 +1,68 @@
+---
+title: 内部细节
+description: 面向在 KumoApp 源码树上工作或与之上游的工程师和集成者的技术真相来源。
+---
+
+import { Cards, Card } from 'fumadocs-ui/components/card';
+import { Callout } from 'fumadocs-ui/components/callout';
+
+这些文档与
+[KumoApp](https://github.com/ProjectKumo/KumoApp) 源码树中 `docs/` 下的
+技术文档相同。它们描述产品范围、共享的 `KumoCoreKit` 控制层、macOS SwiftUI
+界面、`kumo` CLI、运维关注点(权限、持久化、发布、更新)、质量预期,以及
+在 UI 和运行时变更中存活下来的少量实现标准。
+
+如果你正在将 Agent 接入 Kumo、打包自己的构建,或加固一个 fork,从这里开始。
+对于产品使用,[上手](/docs/getting-started)和[进阶](/docs/advanced)单元是
+更易读的入口。
+
+## 产品
+
+<Cards>
+  <Card title="信息架构" href="/docs/internals/information-architecture" description="Daily / Inspect / Configure 划分,主导航,以及空态/错误态预期。" />
+</Cards>
+
+## 核心 (KumoCoreKit)
+
+<Cards>
+  <Card title="控制层" href="/docs/internals/control-layer" description="KumoController facade,所有权边界,以及每个前端遵循的共享规则。" />
+  <Card title="Mihomo 运行时与控制器" href="/docs/internals/mihomo-runtime-controller" description="进程监管、控制器客户端、TUN 运行时设置与传输细节。" />
+  <Card title="配置与运行时配置" href="/docs/internals/profiles-runtime-configuration" description="配置来源、运行时配置生成、覆写规则合并与 Kumo 拥有的键。" />
+</Cards>
+
+## 接口
+
+<Cards>
+  <Card title="macOS SwiftUI 界面" href="/docs/internals/macos-swiftui-interface" description="Scene、导航、工具栏、状态项、App Intents 与 UI 约束。" />
+  <Card title="CLI 与 Agent 控制" href="/docs/internals/cli-agent-control" description="kumo 命令设计、JSON 信封、日志、Agent 技能与服务模式行为。" />
+</Cards>
+
+## 运维
+
+<Cards>
+  <Card title="系统集成与权限" href="/docs/internals/system-integration-permissions" description="应用 bundle、权限、系统代理、Spotlight、Services、App Intents 与权限范围。" />
+  <Card title="持久化与日志" href="/docs/internals/persistence-logging" description="Application Support 布局、状态文件、偏好设置、备份与日志通道。" />
+  <Card title="发布管理" href="/docs/internals/release-management" description="GitHub Releases 源、DMG 产物、latest.yml 清单与发布构建辅助工具。" />
+  <Card title="应用更新" href="/docs/internals/app-updates" description="五分钟轮询、本地通知、校验和验证与安装器交接。" />
+</Cards>
+
+## 质量
+
+<Cards>
+  <Card title="测试与质量" href="/docs/internals/testing-quality" description="当前测试面、验证命令、覆盖缺口与发布前手动 QA 检查清单。" />
+</Cards>
+
+## 标准
+
+<Cards>
+  <Card title="页面标题与窗口 chrome" href="/docs/internals/page-title-chrome" description="目的地标题的位置,以及页面不内联重复它们的原因。" />
+  <Card title="菜单栏状态项" href="/docs/internals/menu-bar-status-item" description="AppKit NSStatusItem 结构、菜单需求与视觉规则。" />
+  <Card title="代理页面滚动容器" href="/docs/internals/proxies-page-scroll-container" description="代理卡片列表为何拥有单个全页 ScrollView。" />
+</Cards>
+
+<Callout type="info">
+这些文档保持对上游 `KumoApp/docs/` 源的忠实。如果这里描述的行为与代码
+不一致,代码是 bug — 请针对
+[KumoApp](https://github.com/ProjectKumo/KumoApp) 开 issue 或 PR,以便两者
+一起修复。
+</Callout>

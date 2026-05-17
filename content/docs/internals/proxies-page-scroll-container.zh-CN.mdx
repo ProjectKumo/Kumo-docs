@@ -1,0 +1,53 @@
+---
+title: 代理页面滚动容器
+description: 代理卡片列表为何拥有单个全页 ScrollView,以及保持该布局完整的回归检查清单。
+---
+
+`Proxies` 页面使用卡片密集、滚动优先的布局。代理组卡片必须读起来像一整个连续的全页内容区域,而非一个嵌套卡片 sheet,位于单独页内标题之下。
+
+## 规则
+
+当代理组可用时,`Proxies` 页面必须对代理组卡片列表使用单个全页 `ScrollView`。
+
+不要用嵌套滚动视图将填充状态包装在 `KumoPage(title:)` 中。这种结构只会使
+卡片区域拥有全页背景/阴影处理。也不要添加页内 `Text("Proxies")` 标题;
+目的地标题属于工具栏 / 导航 chrome。
+
+## 当前模式
+
+`ProxiesView` 将空状态保留在 `KumoPage(title:)` 上,因为空状态应在可用页面
+空间中居中。
+
+对于填充状态,`scrollContent` 拥有整个页面:
+
+```swift
+ScrollView {
+    LazyVStack(spacing: 18) {
+        // 代理组卡片
+    }
+    .padding(.bottom, 8)
+}
+.contentMargins(.horizontal, 24, for: .scrollContent)
+.contentMargins(.top, 24, for: .scrollContent)
+.contentMargins(.bottom, 32, for: .scrollContent)
+.scrollEdgeEffectStyleIfAvailable()
+.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+```
+
+## 视觉需求
+
+- 区域应水平和垂直填充详情面板。
+- 第一个代理组卡片必须与标准 24 pt 页边距对齐。
+- 底部内容边距应在最后一张卡片后留出呼吸空间。
+- 空状态可以继续使用共享的 `KumoPage` 包装器。
+- 页面必须遵循[页面标题与窗口 chrome](/docs/internals/page-title-chrome)。
+
+## 回归检查清单
+
+在发布 `ProxiesView` 变更前,验证:
+
+- 没有 `KumoPage(title: "Proxies")` 包装填充的卡片列表。
+- 没有重复的页内 `Proxies` 大标题。
+- 滚动使用全页内容区域,而非嵌套的仅卡片滚动区域。
+- 卡片背景/阴影处理视觉上覆盖整个填充内容区域。
+- 工具栏中的搜索不改变容器层级。

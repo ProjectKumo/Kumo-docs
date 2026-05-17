@@ -1,0 +1,25 @@
+---
+title: 路线图
+description: Kumo 的下一步 — 分阶段未来工作、服务模式设计,以及 Sparkle 功能对等追踪。
+---
+
+import { Cards, Card } from 'fumadocs-ui/components/card';
+import { Callout } from 'fumadocs-ui/components/callout';
+
+本节追踪 Kumo 的分阶段未来工作。它刻意保持简短和高层次: 目标是传达项目
+方向、设计约束,以及相对于已知参考实现的当前能力。
+
+要影响路线图,在 [KumoApp](https://github.com/ProjectKumo/KumoApp) 上开 issue
+或 discussion。这些文档捕获意图,而非契约。
+
+## 主题
+
+<Cards>
+  <Card title="服务模式" href="/docs/roadmap/service-mode" description="服务模式为何存在、提议的 API 形状、请求签名、迁移步骤,以及本地托管子系统的状态。" />
+  <Card title="Sparkle 功能对等" href="/docs/roadmap/sparkle-parity" description="在核心、运行时、控制器、系统代理、Sub-Store 和 UI 方面比较 Kumo 与其参考实现的能力矩阵。" />
+</Cards>
+
+<Callout type="info">
+路线图是规划文档,而非发布时间表。标记为 `planned` 或 `deferred` 的事项不是
+承诺。标记为 `implemented` 的事项已在 shipping 构建中;其他一切都在进行中。
+</Callout>

@@ -1,0 +1,100 @@
+---
+title: 服务模式
+description: Kumo 特权服务为何存在、提议的 API 表面、请求签名、迁移计划,以及本地托管子系统的状态。
+---
+
+## 服务模式为何存在
+
+首版可以在没有特权服务的情况下运行。这保持了开发简单并避免请求不必要的
+权限。当 Kumo 需要更强的生命周期保证或特权网络功能时,服务模式变得有价值。
+
+## 参考模型
+
+Sparkle 参考项目使用一个单独的服务进程,具备:
+
+- Unix socket 通信
+- 请求签名
+- 核心启动和停止端点
+- 核心事件流
+- 系统代理端点
+- 服务不可用时回退到非服务模式
+
+Kumo 以 Swift 原生形式遵循相同的关注点分离。Helper 路径使用管理员授权和
+LaunchDaemon 注册; 它不使用 NetworkExtension 或安装 VPN 配置 profile。
+
+## 提议的 API 形状
+
+`KumoService` 端点镜像当前 `KumoCoreKit` 意图:
+
+- `GET /status`
+- `POST /core/start`
+- `POST /core/stop`
+- `POST /core/restart`
+- `PATCH /core/mode`
+- `PUT /core/proxies/{group}`
+- `GET /core/events`
+- `GET /sysproxy/status`
+- `POST /sysproxy/enable`
+- `POST /sysproxy/disable`
+- `GET /service/status`
+- `POST /service/install`
+- `POST /service/uninstall`
+- `GET /tun/status`
+- `POST /tun/enable`
+- `POST /tun/disable`
+
+GUI 和 CLI 应保持其公共命令语义不变。
+
+## 认证
+
+服务不信任任意本地客户端。`KumoServiceRequestSigner` 定义了 Unix socket 传输
+使用的 Swift 端规范请求和 HMAC 头形状:
+
+- 生成的共享密钥,持久化在 Kumo Application Support 中。
+- 请求时间戳和 nonce。
+- 请求体哈希。
+- 规范签名字符串。
+
+## 迁移策略
+
+1. 保持本地 `KumoCoreKit` 实现作为默认。
+2. 添加具有相同高级操作的服务客户端协议。
+3. 将 `KumoService` 作为可选后端引入。
+4. 让 TUN 受服务可用性保护: 如果没有 Helper 或特权进程可用,Kumo 记录失败
+   并将 TUN 设置回滚。
+5. 服务模式启用时,将 GUI 和 CLI 切换到服务支持调用。
+6. 保留 CLI 输出 schema。
+
+## 剩余 Helper 工作
+
+- 为公证发布产物加固 LaunchDaemon 安装。
+- 改进自动服务修复和诊断。
+- 扩展代理 guard 事件和 UI 通知。
+- 将 PAC 托管完全移入 Helper 进程以支持长期服务模式。
+
+当前实现添加了服务模式模型、签名端点表面、CLI/UI 状态、管理员授权的
+`KumoService` 安装、Unix socket 请求路由、服务支持的核心/系统代理/TUN 控制,
+以及 TUN 配置生成。它刻意不静默安装特权守护进程; 安装仍然是一个明确的、
+经授权的用户操作。
+
+## 本地子系统状态(Phase B)
+
+Phase B 将几个本地托管子系统引入应用进程,而不引入特权服务。每个都在这里
+记录,以便服务模式迁移可以在没有范围意外的情况下吸收它们。
+
+- **PAC 模式已通过 `PACServer`(NWListener HTTP 环回) +
+  `networksetup -setautoproxyurl` 实现。** 当特权服务存在时,该监听器应移入
+  服务进程,前端应请求 "PAC enabled" 而非直接托管监听器。
+- **Sub-Store 本地生命周期已通过 `SubStoreSupervisor`(Node `Process` 生命周期 +
+  `logs/substore.log`) 在应用进程中实现。** 未来的服务应拥有该进程,以便 GUI
+  可以退出而不杀死 Sub-Store。Sub-Store 的 UI 是完全 SwiftUI 原生的,通过 HTTP
+  与后端通信,因此服务交接只需重新定位后端进程,而非任何 web 前端。
+- **Open at Login 使用 `SMAppService.mainApp`。** 一旦 Helper bundle 存在,切换到
+  `SMAppService.daemon`/`agent` 注册,以便服务可以独立于 UI 运行。
+- **Spotlight 索引使用应用进程中的 `CSSearchableIndex.default()`。** 这无需服务
+  即可工作; 只有数据源需要移动,如果配置状态稍后由服务拥有。
+- **App Intents 回调到 `KumoAppStore`。** 在服务端,这些应该命中上面记录的相同
+  JSON 服务端点,以便 intent 在 GUI 关闭时继续工作。
+- **TUN 模式现在在 `CoreRuntimeSettings` 中有一流设置。** 在服务可用性背后启用时,
+  运行时配置生成拥有 `tun:` 和所需的 `dns:` 块,Helper 从特权后端重启 Mihomo。
+  当服务模式不可用时,Kumo 禁用请求的 TUN 状态并显示 Helper 需求。

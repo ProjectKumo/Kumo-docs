@@ -1,0 +1,157 @@
+---
+title: 系统集成与权限
+description: 应用 bundle 元数据、权限、系统代理命令、Spotlight、Services、App Intents、CLI 符号链接,以及 Kumo 所处的权限边界。
+---
+
+## 应用 Bundle 与权限
+
+Kumo 作为通过 XcodeGen 从 `project.yml` 生成的真实 `.app` bundle 发布
+(`make generate`)。Bundle 包含:
+
+- `Resources/KumoApp/Info.plist` — bundle 元数据、`LSApplicationCategoryType`、
+  `NSAppTransportSecurity`(允许本地网络 PAC)、`NSServices`(Services 菜单)、
+  `CFBundleDocumentTypes`(`.yaml` 配置)、`NSUserActivityTypes`(Spotlight handoff),
+  以及 `NSAppleEventsUsageDescription` /
+  `NSSystemAdministrationUsageDescription`(运行 `networksetup` 和生成 Mihomo /
+  捆绑 Node Sub-Store 进程时使用的同意字符串)。
+- `Resources/KumoApp/KumoApp.entitlements` — `com.apple.security.app-sandbox`
+  **已禁用**,以便 `networksetup` 调用和子进程(Mihomo 核心、Sub-Store
+  后端/前端监听器、PAC HTTP 监听器)无需单独的 Helper 即可工作。
+  `com.apple.security.network.client` 和
+  `com.apple.security.network.server` 已启用。沙箱化保留在 Helper bundle / XPC
+  架构落地后的跟进工作中。
+
+构建命令:
+
+```bash
+make generate    # xcodegen generate -> Kumo.xcodeproj (gitignored)
+make app         # xcodebuild Debug -> build/Build/Products/Debug/Kumo.app
+make app-release # xcodebuild Release
+make dev         # build + open Kumo.app
+make dev-cli     # legacy swift run KumoApp without bundle (no Spotlight / Intents)
+```
+
+## 系统代理
+
+`SystemProxyController` 运行 macOS `networksetup` 命令,现在根据
+`SystemProxyConfiguration` 携带的 `SystemProxyMode` 分支:
+
+- `manual` 模式配置 web、secure web、SOCKS 防火墙代理,加上绕过列表,
+  并显式关闭 auto-proxy 状态。
+- `pac` 模式启动本地 `PACServer`(环回 `NWListener` HTTP,以
+  `application/x-ns-proxy-autoconfig` 响应用户的 PAC 脚本),然后运行
+  `-setautoproxyurl http://127.0.0.1:<port>/proxy.pac` 和
+  `-setautoproxystate on`,同时关闭 manual web/secure/socks。
+- `setEnabled(false)` 停止 PAC 服务器并关闭 manual 和 PAC 状态。
+
+`setSystemProxy(_:dryRun:)` 是 `async` — dry-run 模式跳过监听器并返回将要
+执行的命令供检查(CLI 和测试使用)。
+
+启用系统代理前,Kumo 现在验证目标 `host:mixed-port` 是否接受本地 TCP 连接。
+这防止 macOS 指向一个陈旧或失败的监听器。应用 `networksetup` 命令后,Kumo
+回读 OS 代理状态,仅在 manual 或 PAC 设置与请求的模式匹配时才标记功能为启用。
+
+## 命令行工具符号链接
+
+`Kumo.app/Contents/Helpers/kumo` 是捆绑 CLI 的真相来源;它由 `project.yml` 中的
+`Copy Kumo CLI` 构建后脚本(以及 `Makefile` 中的等效 `cp` 步骤)复制到应用
+bundle 中。Helper 路径是有意的: macOS 卷默认不区分大小写,因此将 CLI 作为
+`Contents/MacOS/kumo` 放置会静默覆盖 GUI 主二进制文件 `Contents/MacOS/Kumo`。
+首次启动引导面板和 设置 > 通用 > 命令行工具 都使用 `CLILinkInstaller`
+管理指向捆绑二进制文件的 `/usr/local/bin/kumo` 符号链接。
+
+`CLILinkInstaller` 复用 `KumoServiceManager` 使用的
+`osascript ... with administrator privileges` 模式,因为 `/usr/local/bin` 对
+普通用户不可写。安装在提升的 shell 调用中运行
+`/bin/ln -sfn <bundled> /usr/local/bin/kumo`;卸载运行 `/bin/rm -f` 并拒绝删除
+不指向捆绑 CLI 的符号链接,因此无关的 CLI shim 不受影响。macOS 每次操作请求
+一次管理员授权,与 Kumo Helper 安装相同,且提示与任何 VPN 配置提示分离。
+
+目标路径通过 `KumoController.cliLinkStatus()` 报告,因此 UI 和 CLI 可以显示
+符号链接是否已安装、指向别处,或被常规文件遮蔽。没有自动更新 — 再次运行
+CLI 安装器会将符号链接重新指向当前 `Kumo.app` 中附带的任何 `kumo`。
+
+## LaunchAgent(登录时打开)
+
+`KumoAppDelegate` 在应用每次启动时将 `SMAppService.mainApp` 与
+`UserPreferences.launchAtLogin` 同步。设置 "Preferences" 标签切换相同的偏好设置
+并通过 `SMAppService` 注册/注销。注册仅在 `Kumo.app` 位于 `/Applications` 时
+成功(macOS 启动服务要求)。
+
+## Dock Badge
+
+应用运行时,`KumoAppDelegate` 中的 1 秒定时器从实时
+`KumoAppStore.connections.count` 写入 `NSApp.dockTile.badgeLabel`,因此用户即使
+在主窗口隐藏时也能看到连接量。
+
+## Spotlight
+
+`SpotlightIndexer` 在启动和配置刷新后将配置摘要(名称 + 来源)编入默认
+`CSSearchableIndex`。每个条目使用配置 id 作为 `uniqueIdentifier`,
+`NSUserActivityTypes` 声明 `io.kumo.KumoApp.openProfile`。点击 Spotlight 结果
+通过 `KumoAppContext.handleUserActivity` 返回 Kumo 并选择匹配的配置。
+
+## Services 菜单
+
+`Info.plist` 注册单个 Services 条目 — "Import Profile to Kumo" — 目标为
+AppDelegate 上的 `importProfileURL(_:userData:error:)`。任何通过 Services 发送的
+文本或 URL 字符串都会通过
+`KumoAppStore.importRemoteProfile(urlString:useProxy:)` 成为配置导入尝试。
+
+## App Intents
+
+`KumoIntents.swift` 暴露五个在快捷指令、Siri 和 Spotlight 中呈现的 intent:
+
+- `StartKumoIntent` / `StopKumoIntent`
+- `RefreshKumoIntent`
+- `SetKumoModeIntent`(参数: `KumoModeChoice` enum 镜像 `OutboundMode`)
+- `ToggleSystemProxyIntent`
+
+短语通过 `KumoShortcutsProvider` 连接。每个 intent 通过
+`KumoAppContext.shared.store` 解析实时 `KumoAppStore`,因此 intent 副作用与
+SwiftUI UI 保持一致。
+
+## Dry Run
+
+`setSystemProxy(_:dryRun:)`(现在是 `async`)仍然支持 dry-run,用于单元测试、
+CLI 预览、Agent 安全和调试网络服务名。Dry-run 返回精确命令而不执行它们,
+也不绑定 PAC 监听器。
+
+## 当前假设
+
+Kumo 仍然可以存储手动网络服务名,但新的默认系统代理设置通过
+`networksetup -listnetworkserviceorder` 解析 `route -n get default` 来偏好
+活动路由接口。这避免在活跃服务是以太网、USB 网络共享或其他 macOS 网络服务
+时将代理设置写入 `Wi-Fi`。
+
+在 dry-run 外启用系统代理时,Kumo 捕获所选服务的先前代理状态。禁用路径
+关闭 Kumo 管理的 manual 和 auto-proxy 状态;后续服务支持 pass 应该从快照
+恢复精确的先前值。
+
+## 权限
+
+Kumo 现在拥有服务模式的模型和命令表面,包括签名服务请求、服务状态、TUN
+状态和 `KumoService` Helper 目标。这遵循 Sparkle 和 Clash Verge Rev 模型:
+macOS 在 Kumo 安装或修复 Helper 时请求管理员授权,但 Kumo **不**注册
+NetworkExtension 或 VPN 配置。因此系统代理或 Mihomo TUN 模式不预期出现
+"Allow VPN Configuration" 系统提示。
+
+在 Helper 或特权进程可用之前,TUN 启用请求以可见的服务模式错误失败,
+而非让 UI 停留在误导性的 "开启" 状态。安装后,Helper 拥有特权操作,如为 TUN
+启动 Mihomo 和应用受保护的系统代理变更。
+
+## 高级功能
+
+以下在第一条服务支持路径之后仍属加固工作:
+
+- 系统代理 guard 和自动恢复
+- 特权 Helper 修复 UX
+- LaunchDaemon 管理加固和公证分发
+
+## 未来工作
+
+- 从捕获的快照恢复精确的先前代理设置。
+- 在服务模式中添加代理 guard。
+- 为 TUN 和受保护的系统变更加固签名特权 Helper 安装器,包括公证应用分发。
+- 采用 App Sandbox + Helper bundle 分离,以便 `networksetup` 调用和子进程可以
+  从沙箱化前端运行。

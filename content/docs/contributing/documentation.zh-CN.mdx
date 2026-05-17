@@ -1,0 +1,170 @@
+---
+title: 文档
+description: 本文档存放在独立仓库中。修改通过 PR 发布,与其他代码变更一样。
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+你正在阅读的网站由
+[github.com/ProjectKumo/Kumo-docs](https://github.com/ProjectKumo/Kumo-docs)
+使用 [Fumadocs](https://fumadocs.dev) 在 Next.js 之上构建。
+
+如果你发现了错别字、缺失的步骤或令你困惑的段落,你已经具备了修复它的资格。
+
+## 在本地运行网站
+
+```bash
+git clone https://github.com/ProjectKumo/Kumo-docs.git
+cd Kumo-docs
+pnpm install
+pnpm dev
+```
+
+打开 `http://localhost:3000` 并编辑 `content/docs/` 下的任何文件。
+页面会在你输入时热重载。
+
+如果没有 `pnpm`,用 `npm install -g pnpm` 安装一次。
+
+## 站点布局
+
+```text
+Kumo-docs/
+  content/
+    docs/
+      index.mdx            落地页
+      meta.json            顶层导航顺序
+      getting-started/     通俗语言的用户文档
+      advanced/            进阶单元文档
+      contributing/        这些页面
+  app/                     Next.js App Router 壳
+  components/              共享 React 组件
+  lib/                     布局配置(导航标题、GitHub URL、应用名称)
+  public/                  静态资源 — favicon、logo PNG
+  source.config.ts         Fumadocs MDX 源配置
+  next.config.mjs          Next.js 配置(包装 Fumadocs MDX)
+```
+
+大多数贡献只涉及 `content/docs/` 内的文件。
+
+## 页面如何工作
+
+每个页面都是一个带 YAML frontmatter 块的 `.mdx` 文件:
+
+```mdx
+---
+title: 侧边栏中显示的页面标题
+description: SEO 和页面头部使用的一行摘要
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+正文内容。Markdown 加 React 组件。
+```
+
+文件夹内的导航顺序来自同级 `meta.json`:
+
+```json
+{
+  "title": "Getting Started",
+  "description": "...",
+  "pages": [
+    "index",
+    "install",
+    "subscriptions",
+    "---日常使用---",
+    "daily-use",
+    "outbound-modes"
+  ]
+}
+```
+
+`"---章节---"` 条目是侧边栏内不可点击的章节标题。
+
+## 常用组件
+
+这些是 Fumadocs 自带的,我们在全站使用:
+
+```mdx
+import { Callout } from 'fumadocs-ui/components/callout';
+import { Cards, Card } from 'fumadocs-ui/components/card';
+import { Steps, Step } from 'fumadocs-ui/components/steps';
+
+<Callout type="info">一条蓝色的信息提示。</Callout>
+<Callout type="warn">一条黄色警告。用于潜在陷阱,而非唠叨。</Callout>
+
+<Cards>
+  <Card title="标题" href="/docs/...">一行简介。</Card>
+</Cards>
+
+<Steps>
+<Step>### 第一步</Step>
+<Step>### 第二步</Step>
+</Steps>
+```
+
+在物有所值时使用它们。页面不需要堆砌所有可用组件。
+
+## MDX 陷阱
+
+迁移过程中有两个解析器 quirks 让我们吃过亏:
+
+- **裸自动链接会破坏 MDX。** `<https://example.com>` 会被解析为 JSX 标签。
+  始终写 `[example.com](https://example.com)` 或将 URL 用反引号包裹。
+- **`<…>` 块内的 `|` 字符会破坏 MDX。** `<auto|always|never>` 会被解析为 JSX。
+  使用 `<auto/always/never>` 或纯文本代替。
+
+构建失败时,错误通常会指向确切的行。
+
+## 风格说明
+
+我们在三个不同地方写三种不同的语气:
+
+| 单元 | 语气 | 避免什么 |
+| --- | --- | --- |
+| **Getting Started** | 友好、具体、无术语。谈论窗口、按钮和菜单。 | JSON、文件路径、Swift 类型名、超出 "代理" 的网络术语。 |
+| **Advanced** | 直接、技术、假设终端环境。命名概念和组件。 | 营销文案、委婉语、"easily"、"simply"。 |
+| **Contributing** | 实用、对等。假设你能读 Swift。 | 重复入门内容;直接跳到内部机制。 |
+
+所有单元统一:
+
+- **使用第二人称**("你做 X")。
+- **主动语态。**
+- **具体示例胜过抽象描述。** 一个 YAML 片段胜过一段关于 YAML 可能长什么样
+  的段落。
+- **链接显而易见的内容。** Kumo-docs 内的交叉引用使用 `/docs/...` 形式。
+- **保持段落简短。** 四到五行为软性上限。
+
+## 提交 PR 前
+
+在本地运行构建:
+
+```bash
+pnpm build
+```
+
+构建过程:
+
+1. 编译每个 `.mdx` 页面。
+2. 为 Fumadocs MDX 生成类型定义。
+3. 构建 Next.js 生产输出。
+
+如果 `pnpm build` 通过,网站就能渲染。
+
+可选但值得做:
+
+```bash
+pnpm types:check
+pnpm lint
+```
+
+## 自我审查写作
+
+两轮检查能捕获大多数问题:
+
+1. **大声朗读。** 在舌头上听起来笨拙的句子,在屏幕上读起来几乎总是笨拙的。
+2. **写完后五分钟再快速浏览。** 在键盘上觉得巧妙的表达,通常结果是废话。
+
+<Callout type="info">
+文档 PR 是对 Kumo 杠杆效应最高的贡献之一。一个清晰的页面能把 "我卡住了"
+的 issue 变成 "我两分钟就解决了"。提前感谢。
+</Callout>

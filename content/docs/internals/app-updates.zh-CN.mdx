@@ -1,0 +1,112 @@
+---
+title: 应用更新
+description: Kumo 如何轮询新发布、限制通知频率、验证下载,并将替换工作交接给外部安装器 Helper。
+---
+
+Kumo 在应用运行时从 GitHub Releases 清单更新自身。更新系统有两个独立的关注点:
+
+- **发现** — 定期检查是否存在更新的清单版本。
+- **安装** — 下载 DMG、验证其 SHA-256 校验和,并将替换工作交接给外部安装器
+  Helper。
+
+## 发布源
+
+Kumo 为选定的更新频道读取一个清单 URL:
+
+- Stable: `https://github.com/ProjectKumo/KumoApp/releases/latest/download/latest.yml`
+- Beta: `https://github.com/ProjectKumo/KumoApp/releases/download/pre-release/latest.yml`
+- Custom: 设置可以覆盖清单 URL 用于开发或私有源。
+
+选定的频道存储在 `UserPreferences.updateChannel` 中。空白自定义 URL 表示 Kumo
+使用该频道的默认源。
+
+## 清单契约
+
+`latest.yml` 作为发布资产与 DMG 一起上传:
+
+```yaml
+version: 0.0.1
+channel: stable
+downloadURL: https://github.com/ProjectKumo/KumoApp/releases/download/0.0.1/Kumo-macos-0.0.1-arm64.dmg
+assetName: Kumo-macos-0.0.1-arm64.dmg
+sha256: <64-character-sha256>
+releaseNotes: |
+  See https://github.com/ProjectKumo/KumoApp/releases/tag/0.0.1
+```
+
+相同字段也接受 JSON 用于本地测试。`AppUpdateManager` 在清单的 `channel` 与
+选定频道不匹配或 `version` 不大于 `CFBundleShortVersionString` 时忽略该清单。
+
+自动安装需要:
+
+- `downloadURL` 指向 `.dmg`;
+- `sha256` 存在且非空。
+
+如果任一条件缺失,UI 打开下载 URL 而非尝试自动安装。
+
+## 异步轮询
+
+`KumoAppStore.startUpdatePolling()` 拥有运行时轮询任务。它在 `KumoRootView`
+将实时 store 附加到 `KumoAppContext` 后调用,
+`KumoAppDelegate.applicationWillTerminate(_:)` 通过 `stopUpdatePolling()` 取消任务。
+
+任务刻意是应用本地的。Kumo 不需要 APNs 或推送 token 进行更新发现。
+
+轮询行为:
+
+1. 等待五分钟。
+2. 读取选定的发布清单。
+3. 将清单版本与应用 bundle 版本比较。
+4. 如果存在更新版本,更新 `lastUpdateCheckResult` 并在通知限制允许时发布
+   更新可用通知。
+5. 循环直到任务被取消。
+
+About 和 Settings 中的手动检查调用相同的更新检查路径,但保留用户可见状态
+行为:
+
+- 手动成功且无更新时设置 `Kumo is up to date.`;
+- 手动失败时写入 `errorMessage`;
+- 后台轮询避免两者,因此短暂网络故障不会干扰主 UI。
+
+## 通知行为
+
+`AppNotificationCoordinator` 注册三个更新类别:
+
+- `UPDATE_AVAILABLE` 带 `Install Now` 和 `Remind Me Later`;
+- `UPDATE_PROGRESS` 带替换式阶段文本;
+- `RESTART_READY` 带 `Restart Now`。
+
+五分钟轮询可以重复发现同一发布,因此更新通知按版本限制:
+
+- 默认每个版本通知一次;
+- `Remind Me Later` 移除可见更新通知并将该版本抑制六小时;
+- snooze 过期后,同一版本可能再次通知;
+- 更新的版本被视为新的通知候选。
+
+通知操作通过
+`KumoAppStore.handleNotificationAction(actionIdentifier:manifest:version:)` 路由回。
+`Install Now` 使用当前可用检查到的更新,或通知 payload 中嵌入的清单。
+
+## 安装流程
+
+当用户安装更新时:
+
+1. Kumo 将 DMG 下载到
+   `~/Library/Application Support/Kumo/updates/downloads/`。
+2. Kumo 计算 SHA-256,如果不匹配清单则删除文件。
+3. Kumo 发布粗略的下载/安装通知更新。
+4. 如果系统代理已启用,Kumo 在替换前禁用它。
+5. 如果核心正在运行,Kumo 在替换前停止它。
+6. Kumo 启动分离式安装器 Helper。
+7. Helper 等待当前应用进程退出,挂载 DMG,将 `Kumo.app` 覆盖到当前应用之上,
+   分离 DMG,并重新打开 Kumo。
+
+Helper 是外部的,因为应用无法在运行时安全地覆盖自己的 bundle。
+
+## 日志与缓存
+
+- 下载: `~/Library/Application Support/Kumo/updates/downloads/`
+- 安装器日志: `~/Library/Application Support/Kumo/logs/app-update-installer.log`
+
+macOS 通知不为该更新流程提供连续更新的原生进度条。Kumo 使用应用内
+`ProgressView` 显示精确进度,使用粗略通知阶段文本用于后台感知。

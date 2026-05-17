@@ -1,0 +1,79 @@
+---
+title: 核心控制层
+description: KumoController facade、KumoCoreKit 的内部职责,以及每个前端遵循的设计规则。
+---
+
+## 目的
+
+`KumoCoreKit` 是 GUI、CLI、测试和未来服务模式的共享领域层。它防止应用为
+生命周期控制、配置生成、控制器调用和系统代理变更发展出独立且不一致的
+实现。
+
+## 公共入口
+
+`KumoController` 是高级 facade。目前暴露:
+
+- `status()`
+- `currentProfile()`
+- `profiles()`
+- `setCurrentProfile(id:)`
+- `coreCandidates()`
+- `setCorePath(_:)`
+- `installManagedCore()`
+- `start(corePath:)`
+- `stop()`
+- `restart(corePath:)`
+- `setMode(_:)`
+- `proxyGroups()`
+- `selectProxy(group:name:)`
+- `testProxyDelay(proxy:testURL:)`
+- `testGroupDelay(group:)`
+- `refreshProfile(from:)`
+- `importProfile(from:)`
+- `profileContent(id:)`
+- `updateProfile(...)`
+- `deleteProfile(id:)`
+- `refreshProfile(id:)`
+- `refreshDueProfiles()`
+- `coreConfiguration()`
+- `rules()`
+- `connections()`
+- `recentLogs(limit:)`
+- `setSystemProxy(_:dryRun:)`
+
+该 API 刻意贴近 CLI 命令词汇和未来服务 API。
+
+## 内部职责
+
+`KumoCoreKit` 按职责划分:
+
+- Models: `Profile`、`ProxyGroup`、`ProxyNode`、`CoreStatus`、`OutboundMode`。
+- Configuration: 配置加载与运行时配置生成。
+- Runtime: Mihomo 进程监管。
+- Networking: Mihomo external-controller 客户端。
+- System: macOS 系统代理命令构造与执行。
+- Support: 路径、状态存储与共享错误。
+
+## 设计规则
+
+- 将 UI 关注点排除在 `KumoCoreKit` 之外。
+- 将 `Process` 和 shell 执行放在小型包装器之后。
+- 保持 dry-run 路径对测试和 Agent 工作流可用。
+- 保持错误信息足够具体,供 UI 和 CLI 显示。
+- 将高级 GUI 行为放在 `KumoController` 之后,以便 CLI 和未来服务模式可以复用。
+
+## Sparkle 对齐增长区域
+
+下一次对齐 pass 在这些区域扩展 facade:
+
+- 运行时设置: 受控端口、LAN、日志级别、控制器密钥、IPv6 和 Geo 数据设置。
+- 提供者: 代理提供者和规则提供者的列表、刷新与安全内容预览。
+- 规则: 更丰富的规则元数据和规则启用/禁用操作。
+- 日志: 结构化近期日志加实时日志事件流。
+- 覆写规则: 首先是有序 YAML 覆写,然后是经过审查的 JavaScript 转换支持。
+- Sub-Store: 本地服务生命周期与可选自定义后端支持。
+
+## 未来兼容性
+
+当引入特权服务时,`KumoController` 应该能够在不改变 GUI 或 CLI 命令语义的情况下,
+从本地实现切换到服务支持实现。

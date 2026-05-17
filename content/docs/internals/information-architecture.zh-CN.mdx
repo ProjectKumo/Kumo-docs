@@ -1,0 +1,58 @@
+---
+title: 信息架构
+description: Kumo 的产品目标、主导航、Daily / Inspect / Configure 划分,以及空态/错误态预期。
+---
+
+## 目标
+
+Kumo 应该感觉像一款帮助用户快速连接的 Mac 工具,而非网络运维仪表盘。
+首屏必须回答五个问题:
+
+- Kumo 是否已连接?
+- 哪个出站模式处于活跃状态?
+- macOS 系统代理是否已启用?
+- TUN 是否已启用?
+- 当前正在使用哪个配置和代理组?
+
+## 主导航
+
+主应用使用按任务频率分组的源列表侧边栏:
+
+- **Daily**: Overview、Profiles、Proxies。
+- **Inspect**: Connections、Logs、Rules。
+- **Configure**: Core、System Proxy、DNS、TUN、Sniffer、Resources、Overrides、
+  Sub-Store。
+
+这将日常操作保留在顶部,同时保留对更深入功能的访问,而无需将它们隐藏在通用
+高级页面之后。
+
+## Configure 区域
+
+以下功能属于 `Configure` 或 `Settings`:
+
+- DNS 控制
+- TUN 配置
+- Sniffer 配置
+- 服务模式设置
+- 核心路径覆盖
+- 外部资源和提供者管理
+- 有序 YAML 覆写规则和未来的 JavaScript 转换
+- 未来的 Sub-Store 集成
+
+仅 Inspect 的功能如连接表格、完整日志和规则位于 `Inspect`,因为它们回答核心
+正在做什么,而非应该如何配置它。
+
+Settings 保留给应用级偏好,如启动、窗口、语言和更新选择。运行时状态摘要
+属于 `Daily` 表面和菜单栏状态项,而非设置窗口。
+
+## 空态与错误态
+
+Kumo 应使用通俗语言消息:
+
+- 缺失核心: 解释如何提供 Mihomo 二进制路径。
+- 无配置: 解释在哪里添加默认配置或如何使用 CLI 刷新命令。
+- 控制器不可用: 解释核心可能尚未运行。
+- 系统代理失败: 显示失败的命令并建议检查网络服务名。
+- 提供者或覆写规则失败: 识别资源、操作,以及运行中的核心是否需要刷新或重启。
+
+用户应始终知道发生了什么以及接下来尝试什么。

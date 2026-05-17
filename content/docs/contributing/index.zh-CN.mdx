@@ -1,0 +1,63 @@
+---
+title: 参与贡献
+description: 如何提交 issue、修复 bug、提交功能或改进本文档。
+---
+
+import { Cards, Card } from 'fumadocs-ui/components/card';
+import { Callout } from 'fumadocs-ui/components/callout';
+
+Kumo 是一个在
+[AGPL-3.0-only](https://github.com/ProjectKumo/KumoApp/blob/main/LICENSE)
+协议下开源的项目。
+
+本单元假设你熟悉终端和 Swift。不需要 macOS 系统工程背景 — 错别字修复、
+错误信息改进和 UI 澄清都是有效的贡献。
+
+## 从哪里开始
+
+<Cards>
+  <Card title="配置开发环境" href="/docs/contributing/build-from-source">
+    克隆仓库、安装 Xcode 16,并从源码运行 Kumo。
+  </Card>
+  <Card title="浏览仓库结构" href="/docs/contributing/repository-layout">
+    各个目录存放的内容 — 模块、脚本、测试、文档。
+  </Card>
+  <Card title="理解架构" href="/docs/contributing/architecture">
+    四个模块的划分,以及为什么 GUI 不直接驱动 Mihomo。
+  </Card>
+  <Card title="提交高质量的 issue" href="/docs/contributing/issues">
+    复现 bug 需要什么信息,以及什么样的功能请求是可执行的。
+  </Card>
+  <Card title="提交 Pull Request" href="/docs/contributing/pull-requests">
+    分支策略、提交风格、测试与审查流程。
+  </Card>
+  <Card title="编写或修复文档" href="/docs/contributing/documentation">
+    本文档是 MDX 格式。你可以像修改代码一样通过 PR 来修改它们。
+  </Card>
+</Cards>
+
+## 基本规则
+
+- **友善待人。** 审查者、报告者和其他贡献者都是真实的人。
+- **一个 PR 一个变更。** 小而专注的 diff 更容易合并。
+- **测试是变更的一部分。** 如果你修复了一个 bug,添加一个本应捕捉到它的测试。
+- **文档是变更的一部分。** 如果你的补丁改变了产品行为、权限、运行时配置或持久化,
+  在同一个 PR 中更新相关文档。
+- **用户可见文案使用英文,** 除非变更专门关于本地化。
+
+<Callout type="info">
+如果不确定某个变更是否受欢迎,先开一个讨论或 draft PR。早期反馈可以避免
+浪费精力。
+</Callout>
+
+## 适合首次贡献的变更
+
+- 修复本文档中的错别字或失效链接
+  ([Kumo-docs](https://github.com/ProjectKumo/Kumo-docs))。
+- 改进 `KumoCoreKit` 中的错误信息,使原因能从 CLI 输出中直接看出。
+- 精简或澄清 `KumoApp` 中的 UI 字符串(先阅读 `AGENTS.md` — 这里的文案规范
+  很重要)。
+- 为 `KumoCoreKit` 的模型或辅助函数添加缺失的测试。
+
+如果某件事表面上看起来简单但底层涉及结构性改动,在 issue 或 PR 中询问。
+会有人帮忙找到安全的范围。

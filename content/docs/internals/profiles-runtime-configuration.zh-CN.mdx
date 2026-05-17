@@ -1,0 +1,99 @@
+---
+title: 配置与运行时配置
+description: 配置来源、默认安全配置、运行时配置生成、覆写规则合并与 Kumo 拥有的键。
+---
+
+## 配置来源
+
+Kumo 用 `ProfileSource` 建模配置:
+
+- `remote(URL)` 用于订阅 URL。
+- `file(URL)` 用于本地 Clash 或 Mihomo YAML 文件。
+- `inline` 用于生成的 fallback 配置。
+
+首个版本支持默认本地配置和通过 CLI 的远程刷新。Kumo 也可以导入由捆绑
+Sub-Store 后端生成的配置。这种情况下配置元数据记录原始 Sub-Store 下载路径,
+刷新会针对当前本地后端 URL 重建请求,附带 `target=ClashMeta` 和
+`noCache=true`。
+
+## 默认配置
+
+如果默认配置不存在,`ProfileRepository` 返回一个最小的直连配置:
+
+```yaml
+proxies: []
+proxy-groups:
+  - name: Proxy
+    type: select
+    proxies:
+      - DIRECT
+rules:
+  - MATCH,DIRECT
+```
+
+这让应用以安全的空状态启动,而非在缺失配置时崩溃。
+
+## 运行时配置生成
+
+`RuntimeConfigBuilder` 将 Kumo 控制的运行时设置追加到选定的配置:
+
+- `external-controller`
+- `secret`
+- `mixed-port`
+- `mode`
+- `allow-lan`
+- `log-level`
+- `ipv6`
+- `find-process-mode`
+- Geo 数据设置
+- Kumo TUN 启用时的 TUN 和配对 DNS 设置
+
+目标是保持用户配置可移植,同时确保 Kumo 能控制运行中的核心。
+Kumo 默认设置 `find-process-mode: always`,以便 Mihomo 控制器返回活跃连接的
+`processPath` 元数据;macOS 连接视图使用该路径显示原生应用图标。
+
+## 覆写规则
+
+Kumo 计划一个有序覆写层:
+
+1. 选定的配置 YAML。
+2. 配置专属覆写规则。
+3. 全局覆写规则。
+4. Kumo 控制的运行时设置。
+
+最终层总是对控制器地址、端口、模式和其他 Kumo 拥有的键获胜。
+当 Kumo TUN 启用时,最终层也拥有顶层 `tun` 和 `dns` 块,因此 UI 设置如 stack、
+auto route、route exclusions、MTU、DNS hijack、ICMP forwarding、fake-IP range
+和 nameservers 都会反映在生成的运行时配置中。
+
+## 当前合并策略
+
+当前实现先将 YAML 解析为结构化值再合并:
+
+1. 选定的配置提供基础文档。
+2. 后续覆写规则递归合并映射值。
+3. 数组和标量值默认替换早期值。
+4. 显式序列算子可以前置、追加或删除数组条目。
+5. Kumo 拥有的运行时键从用户提供的文档中移除。
+6. Kumo 控制的运行时设置最后追加并总是获胜。
+
+Kumo 支持 Sparkle 风格序列算子(`+rules`、`rules+` 以及其他数组键的相同形状)
+和 Clash Verge Rev 风格规则算子(`prepend-rules`、`append-rules`、
+`delete-rules`)。这些算子键在生成过程中被消费,不会写入最终运行时配置。
+以 `!` 结尾的键直接替换目标值,而非递归合并嵌套映射。
+
+这为常见 Mihomo 配置节提供了确定性的优先级,无需引入 JavaScript 转换或
+特权服务依赖。由于运行时文件从结构化值序列化,完整的 YAML 注释和格式
+不会被保留。
+
+TUN 高级设置编辑持久化到 `CoreRuntimeSettings.tun`。在 Mihomo 运行时应用它们
+会重启核心,匹配 Mihomo 的期望: 接口级 TUN 变更从生成的运行时 YAML 加载,
+而非逐片 patch。
+
+## 未来工作
+
+- 从响应头跟踪订阅用户信息。
+- 添加配置元数据和多配置选择。
+- 添加高级 YAML 覆写文件。
+- 仅在 YAML 覆写流程和沙箱策略稳定后添加 JavaScript 转换。
+- 在捆绑后端 API 表面稳定后扩展 Sub-Store 导入辅助工具。

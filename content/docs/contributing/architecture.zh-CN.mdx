@@ -1,0 +1,133 @@
+---
+title: 架构
+description: 为什么 GUI 不直接驱动 Mihomo,以及共享控制层保证了什么。
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+Kumo 中最具影响力的单一决策是:
+
+> **UI 和 CLI 都是共享控制层的客户端。两者都不直接驱动 Mihomo。**
+
+本节的其余内容都是该决策的推论。
+
+## 分层视图
+
+```text
+┌──────────────────────┐   ┌──────────────────────┐   ┌──────────────────────┐
+│   KumoApp (SwiftUI)  │   │   KumoCLI (`kumo`)   │   │  KumoService (未来)  │
+└──────────┬───────────┘   └──────────┬───────────┘   └──────────┬───────────┘
+           │                          │                          │
+           └────────────┬─────────────┴─────────────┬────────────┘
+                        ▼                           ▼
+                ┌────────────────────────────────────────┐
+                │              KumoCoreKit               │
+                │  Models · Profiles · Runtime · Net ·   │
+                │  System proxy · Paths · State · Errors │
+                └────────────────────────────────────────┘
+                                  ▼
+                ┌────────────────────────────────────────┐
+                │           Mihomo core (process)        │
+                │  external-controller · mixed-port · …  │
+                └────────────────────────────────────────┘
+```
+
+`KumoCoreKit` 是契约。如果业务逻辑被添加到 `KumoApp` 或 `KumoCLIKit`,
+停下来思考它是否属于共享库。
+
+## 每层负责什么
+
+### `KumoCoreKit`
+
+- Mihomo 进程生命周期 — 启动、停止、重启、监管。
+- 配置加载 — 获取订阅、解析 YAML、合并覆写规则、生成最终的
+  `work/config.yaml`。
+- Mihomo external-controller HTTP 客户端 — 代理切换、组选择、流量读取。
+- 通过 `networksetup` 控制 macOS 系统代理,包括 PAC。
+- 状态持久化(`state.json`、`preferences.json`、`proxy-geo-cache.json`)。
+- Sub-Store sidecar 生命周期。
+- Agent 技能安装。
+- 稳定、有类型的错误。CLI 的 `error.code` 值来自这里。
+
+### `KumoCLIKit`
+
+- 命令解析(Argument Parser)。
+- 输出渲染 — 纯文本 vs JSON 信封。
+- Dry-run 格式化。
+- 退出码映射。
+- **仅此而已。** CLI 命令永远不会绕过 `KumoCoreKit` 直接调用
+  `networksetup` 或访问 Mihomo。
+
+### `KumoApp`
+
+- SwiftUI 视图与导航。
+- 菜单栏状态项。
+- 设置窗口。
+- 引导面板。
+- `AGENTS.md` 中的 UI 文案约束。
+
+### `KumoService`
+
+- 保留给服务模式。将拥有 TUN、受保护的系统代理和签名请求传输。
+
+## 不变式
+
+这些是保持各层诚实的规则。
+
+### 1. CLI 必须能在没有 GUI 的情况下工作
+
+你可以安装 `kumo`,运行 `kumo start`,切换节点,刷新配置,并检查状态,
+无需打开应用。这是"这个逻辑是否在正确模块中"的测试标准。
+
+### 2. GUI 必须能在用户 PATH 上没有 CLI 的情况下工作
+
+从未碰过终端的用户可以安装 Kumo,粘贴订阅 URL,并使用它。应用中没有任何
+内容会 shell out 到 `kumo`。
+
+### 3. JSON 是一种契约
+
+`kumo --json` 输出是公共 API 的一部分。添加字段没问题。重命名或删除字段
+是破坏性变更。`error.code` 值同样适用。
+
+### 4. Dry-run 对系统写入是强制的
+
+任何改变 macOS 状态的操作 — 系统代理、CLI 符号链接 — 都必须支持 `--dry-run`。
+Dry-run 打印精确命令而不执行它们。
+
+### 5. 权限是显式的
+
+如果操作需要 `with administrator privileges`,用户会看到针对该具体操作
+的单个原生 macOS 提示。Kumo 不持有持续的 root 权限。
+
+### 6. 状态解码是宽容的
+
+`state.json` 和 `preferences.json` 对缺失字段使用默认值解码。Kumo 更新添加
+新键绝不能使旧的状态文件失效。回退到旧版 Kumo 的用户不应丢失所有设置。
+
+## 异步与并发
+
+Kumo 在 `KumoCoreKit` 中全程使用 Swift 6 的结构化并发。
+
+- 长期监管的常驻工作(Mihomo 进程、Sub-Store sidecar、更新轮询)存放在
+  actor 中。
+- HTTP 工作使用带 async API 的 `URLSession`。
+- UI 通过 `@Observable` / `ObservableObject` 类型观察发布的状态。
+- 测试使用 `swift-testing`,避免触碰真实系统状态 — 它们使用临时的
+  Application Support 目录和 `--dry-run` 来执行系统代理命令。
+
+如果新增长期运行的部分,思考它是否应该存在于 actor 中,以及它的状态是否
+属于现有的被观察类型。
+
+## 设计讨论发生在哪里
+
+架构变更通过 KumoApp 仓库中的 `docs/` 进行。最有用的起点:
+
+- `docs/product/information-architecture.md` — 产品范围。
+- `docs/core/control-layer.md` — 控制边界的详细说明。
+- `docs/operations/system-integration-permissions.md` — 权限为何设计成当前形态。
+- `docs/roadmap/service-mode-roadmap.md` — 服务模式的走向。
+
+<Callout type="info">
+如果你的变更触及本页的不变式 — 例如,你需要 GUI 调用 `kumo` 来完成某事 —
+请先开 issue。几乎总有办法保持不变式完整;如果不行,该决策值得书面讨论。
+</Callout>

@@ -1,0 +1,193 @@
+---
+title: CLI 与 Agent 控制
+description: kumo 可执行文件的设计、安装和使用方式 — 包括 JSON 信封、日志、Agent 技能和服务模式委托。
+---
+
+## 目的
+
+`kumo` 可执行文件为人类、shell 脚本和编码 Agent 提供一个稳定的控制表面。
+它使用与 SwiftUI 应用相同的 `KumoCoreKit` facade。
+
+## 在 PATH 上安装 `kumo`
+
+`Kumo.app/Contents/Helpers/kumo` 随应用 bundle 一起发布(`Helpers/` 而非
+`MacOS/`,因此 CLI 不会与 GUI 的不区分大小写 `Contents/MacOS/Kumo` 冲突)。
+推荐安装路径是首次启动引导面板(也可通过 设置 > 通用 > 命令行工具 访问),
+它在一次性 macOS 管理员授权提示后将捆绑二进制文件符号链接到
+`/usr/local/bin/kumo`。相同的流程由 `KumoController.cliLinkStatus()` /
+`installCLILink()` / `uninstallCLILink()` 包装,供编程使用。手动 `ln -s`
+仍然支持,但新安装不再需要。
+
+`swift run kumo` 仅是源码树开发冒烟测试。面向用户的安装必须通过捆绑的
+Helper 二进制文件验证,安装后则通过指向它的 `/usr/local/bin/kumo` 符号链接
+验证。
+
+## 命令设计
+
+命令刻意贴近用户目标:
+
+```bash
+kumo status --json
+kumo start --core /path/to/mihomo
+kumo stop
+kumo restart
+kumo mode rule
+kumo mode global
+kumo mode direct
+kumo proxies --json
+kumo select "Proxy" "HK-01"
+kumo profile refresh "https://example.com/sub.yaml"
+kumo sysproxy on --dry-run --json
+kumo service status --json
+kumo service install
+kumo tun enable --json
+kumo substore status --json
+kumo skills status --json
+kumo skills install --agent codex --dry-run --json
+kumo completion zsh
+kumo logs cli --limit 5
+```
+
+## CLI 交互约定
+
+Kumo 遵循 npm CLI 交互模型中使命令行工具可发现和可脚本化的部分:
+
+- `kumo --help` / `kumo -h` 显示常见任务、所有命令名和下一步帮助提示。
+- `kumo -l` / `kumo --long` 展开命令描述、用法、选项和别名。
+- `kumo <command> -h` 和 `kumo help <term>` 提供命令级帮助。
+- `kumo --version` 仅打印版本字符串。
+- `kumo completion <zsh|bash|fish>` 将 shell 补全脚本写入 stdout。
+- 保守的别名允许用于低风险只读路径: `status` → `st`、`proxies` → `proxy`、
+  `config` → `c`。
+- 能写入系统或用户状态的命令在可能时应支持 `--dry-run` 以提供有意义的预览。
+
+## 输出模式
+
+默认输出是可读文本。`--json` 返回稳定的包装器:
+
+```json
+{
+  "ok": true,
+  "data": {},
+  "error": null
+}
+```
+
+错误使用相同的包装器,`ok: false`。
+
+`--json` 输出始终是 stdout 上的纯 JSON。它不得包含 ANSI 转义码、进度文本、
+警告或诊断日志。人类可读的诊断信息在文本模式下写入 stderr。
+
+## 终端渲染
+
+文本模式仅在 stdout/stderr 是交互式 TTY 时使用轻量 ANSI 样式。输出被管道
+或重定向时、`--json` 使用时、`NO_COLOR` 设置时、`CLICOLOR=0` 时或传入
+`--color never` 时禁用渲染。`--color always|auto|never` 默认为 `auto`。
+
+可见状态标签是 ASCII,因此颜色从来不是唯一信号:
+
+- `[ok]` 表示健康的成功。
+- `[warn]` 表示警告或部分就绪。
+- `[error]` 表示失败。
+- `[dry-run]` 表示预览。
+
+## CLI 日志
+
+Kumo 使用 npm 风格日志控制:
+
+- `--loglevel <silent|error|warn|notice|http|info|verbose|silly>` 控制终端诊断。
+  默认是 `notice`。
+- `--silent` 等价于 `--loglevel silent`; `--verbose` 等价于
+  `--loglevel verbose`; `-d` 等价于 `--loglevel info`。
+- 正常命令结果写入 stdout。日志、警告、进度、timing 输出和诊断写入 stderr。
+- `--logs-dir <path>` 覆盖 CLI 调试日志目录。默认 CLI 日志位于 `logs/cli/` 下。
+- `--logs-max <count>` 限制保留的 CLI 调试日志。`--logs-max=0` 禁用调试日志文件。
+- `--timing` 写入进程专属的 timing JSON 文件,并可能在文本模式下将 timing
+  摘要打印到 stderr。
+- 日志在写入终端或文件输出前会对配置 URL token、控制器密钥、授权头、
+  basic auth 密码和类似凭证进行脱敏。
+
+`kumo logs` 有两个日志表面:
+
+- `kumo logs [runtime] [--limit <count>] [--level <level>] [--json]` 显示
+  Mihomo/运行时日志。
+- `kumo logs cli [--limit <count>] [--level <level>] [--json]` 显示 Kumo CLI
+  调试日志摘要。
+- `kumo logs path` 打印日志目录。
+- `kumo logs clean [--dry-run] [--json]` 清理旧的 CLI 调试和 timing 日志。
+
+## Agent 友好行为
+
+Agent 工作流需要可预测的行为:
+
+- 每条命令都应支持 `--json`。
+- 变更系统设置的命令应提供 dry-run。
+- Agent 技能安装应在写入用户或项目 Agent 技能目录之前使用
+  `kumo skills ... --dry-run`。
+- 退出码 `0` 表示成功。
+- 退出码 `1` 表示命令失败,`error` 解释原因。
+- 即使实现稍后迁移到服务,命令名也应保持稳定。
+
+## Agent 技能
+
+`kumo skills` 将捆绑的 `kumo-cli` Agent Skill 安装到支持的编码 Agent 技能
+目录中。CLI 和 macOS 集成 UI 都使用相同的 `KumoCoreKit` 目标映射和安装状态。
+
+支持的 Agent:
+
+- `cursor` → `~/.cursor/skills` 全局,`.cursor/skills` 项目作用域。
+- `claude` → `~/.claude/skills` 全局,`.claude/skills` 项目作用域。
+- `codex` → `$CODEX_HOME/skills` 或 `~/.codex/skills` 全局。
+- `gemini` → `~/.gemini/skills` 全局。
+- `agents` → `~/.agents/skills` 全局,`.agents/skills` 项目作用域。
+- `all` → 选定作用域支持的每个目标。
+
+命令:
+
+```bash
+kumo skills status [--agent <cursor|claude|codex|gemini|agents|all>] [--scope <global|project>] [--json]
+kumo skills install [--agent <cursor|claude|codex|gemini|agents|all>] [--scope <global|project>] [--dry-run] [--force] [--json]
+kumo skills uninstall [--agent <cursor|claude|codex|gemini|agents|all>] [--scope <global|project>] [--dry-run] [--json]
+```
+
+安装默认非破坏性: 如果目标技能目录已存在且未被 Kumo 记录为已安装,
+命令会失败,除非调用者显式传入 `--force`。
+
+`codex` 和 `gemini` 不支持项目作用域。`--agent all --scope project` 只针对
+支持项目作用域的 Agent。
+
+## App Intents(GUI 表面)
+
+macOS 应用额外暴露以下 App Intents(通过 `KumoIntents.swift`),以便快捷指令、
+Siri 和 Spotlight 可以在不生成 CLI 进程的情况下驱动 Kumo:
+
+- `Start Kumo`
+- `Stop Kumo`
+- `Refresh Kumo`
+- `Set Kumo Mode`(参数: `KumoModeChoice` ↔ `OutboundMode`)
+- `Toggle Kumo System Proxy`(参数: `enable: Bool`)
+
+App Intents 回调到实时 `KumoAppStore`,因此它们的效果与从 GUI 触发相同流程
+一致。它们需要 `Kumo.app` bundle(而非 `swift run`)。
+
+## 共享控制层
+
+CLI 不得绕过 `KumoCoreKit`。当 `KumoService` 已安装且可达时,相同命令切换到
+服务支持调用,同时保持命令名和 JSON schema 兼容:
+
+- `kumo start|stop|restart` 将 Mihomo 生命周期委托给 Helper。
+- `kumo sysproxy on|off` 将受保护的系统代理变更委托给 Helper,除非使用
+  `--dry-run`。
+- `kumo tun enable|disable` 将 TUN 状态变更委托给 Helper,当没有 Helper 或
+  特权进程可以管理 `utun` 时清晰失败。
+- `kumo service install|uninstall|status` 报告 LaunchDaemon/socket 状态,安装和
+  卸载使用 macOS 管理员授权。
+- `kumo substore status|prepare|start|stop|restart` 管理捆绑的 Sub-Store 资源和
+  SwiftUI 应用使用的相同本地生命周期。
+
+App Intents 遵循相同规则: 服务模式落地时,intent 应该命中服务端点而非直接
+访问 `KumoAppStore`,以便它们在 GUI 关闭时仍然工作。
+
+## 未来工作
+
+- 为自动化消费者添加 JSON schema。

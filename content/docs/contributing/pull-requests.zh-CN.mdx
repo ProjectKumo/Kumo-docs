@@ -1,0 +1,143 @@
+---
+title: Pull Requests
+description: 分支策略、提交风格、测试与审查流程。
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+本页描述如何提交一个能快速合并的补丁。
+
+## 开始之前
+
+对于超过一行的修复,**先开 draft PR 或 issue**。
+一句 "我想做 X,可以吗?" 的消息能避免在最终会被重定向的事情上浪费时间。
+
+几乎不需要预先批准的事:
+
+- 错别字修复。
+- 文档澄清。
+- 现有行为的测试补充。
+- 错误信息改进。
+
+提前知会更有帮助的事:
+
+- 新 CLI 命令或新标志。
+- JSON 信封字段的变更。
+- 新权限。
+- 任何触碰系统状态的操作(系统代理、TUN、Helper)。
+- 任何破坏性变更。
+
+## 分支
+
+Fork 仓库,然后从 `main` 分支:
+
+```bash
+git checkout -b fix-overrides-merge-order
+```
+
+我们不强制分支命名规范,但 `<type>-<short-summary>` 能让 PR 列表保持可读。
+有用的类型: `fix`、`feat`、`docs`、`refactor`、`test`、`chore`。
+
+## 提交风格
+
+我们不强制 Conventional Commits,但我们欣赏它们。
+
+一条好的提交消息:
+
+- 有**不超过 72 个字符的主题行**,用祈使语气描述变更("Add" 而非 "Added")。
+- 如果主题不够,包含解释**为什么**以及链接到 issue 的正文。
+- 保持专注。一个提交一个变更。请求审查前将 WIP 压缩。
+
+示例:
+
+```text
+fix(overrides): respect explicit `delete-rules` after a `+rules` prepend
+
+The override merge applied `delete-rules` against the original rule list
+instead of the prepended one, so user deletes silently no-oped when paired
+with prepend operations.
+
+Fixes #142
+```
+
+## 测试
+
+没有测试的变更是等待发生的回归。
+
+- **`KumoCoreKit` 变更**必须附带 `Tests/KumoCoreTests` 下的 SwiftPM 测试。
+  标准是"这个测试在修复前会失败吗?"
+- **`KumoCLIKit` 变更**应该附带 `Tests/KumoCLITests` 下的测试。CLI 测试可以在
+  不生成进程的情况下执行命令。
+- **`KumoApp` 变更**较难单元测试。至少手动演练流程并在 PR 正文中描述步骤。
+
+推送前运行:
+
+```bash
+make swift-test
+# 或者,如果你想跑完整流水线:
+make check
+```
+
+`make check` 构建应用、运行测试,并对 `kumo status --json` 做冒烟测试。
+
+## 文档
+
+如果你的 PR 变更了以下内容,在同一个 PR 中更新对应的文档:
+
+- 产品行为(Getting Started → 相关页面)。
+- CLI 表面(Advanced → `cli-reference`)。
+- 配置 / 覆写规则语义(Advanced → `profiles-reference` /
+  `overrides`)。
+- 权限(Advanced → `permissions`)。
+- 文件位置(Advanced → `file-locations`)。
+- 架构或构建(Contributing → `architecture` / `build-from-source`)。
+
+KumoApp 仓库中 `docs/` 下的工程文档也需要在产品行为、架构、持久化、权限、
+测试预期或 UI 信息架构发生有意义变更时同步更新。
+
+## 提交 PR
+
+PR 描述应该回答:
+
+1. **变更了什么?** 一段摘要。
+2. **为什么?** 链接到 issue,或描述动机。
+3. **如何测试的?** 测试名称、手动步骤、UI 变更的前后截图。
+4. **有后续工作吗?** 你注意到但有意排除的事项。
+
+任何可见变更都要添加截图。CLI 变更粘贴新输出。审查者不应该需要运行分支
+才能知道变更了什么。
+
+## 审查
+
+审查者按顺序检查:
+
+1. **diff 与描述一致。** 没有意外的重写。
+2. **变更尊重[架构不变式](/docs/contributing/architecture#不变式)。**
+   尤其:CLI 能在没有 GUI 时工作,JSON 稳定,dry-run 存在。
+3. **测试在修复前会失败。**
+4. **错误是可操作的。** 新的 `error.code` 应该告诉用户出了什么问题以及
+   可以尝试什么。
+5. **UI 文案遵循 `AGENTS.md`** — 简洁、原生控件、无冗余标签。
+6. **文档随变更一起发布。**
+
+我们会在行内评论并提问。`Changes requested` 审查不是拒绝 — 它是通往
+合并的一步。
+
+## 合并
+
+我们默认使用 squash 合并。你的最终提交消息将是 PR 标题加上 squash 摘要正文。
+合并前编辑两者。
+
+如果维护者要求你修改,请 force-push 到你的分支
+(`git push --force-with-lease`)。我们宁愿看到干净的历史,也不愿看到一串
+"fix review"、"fix review again" 提交。
+
+<Callout type="info">
+合并后,变更进入 `main`。它会在下一个带标签的发布中出货。如果修复紧急,
+你可以自己从 `main` 构建 — 见[从源码构建](/docs/contributing/build-from-source)。
+</Callout>
+
+## 行为准则
+
+友善待人。假设善意。给予认可。如果对话变得激烈,离开一小时。Kumo 是由
+喜欢构建 Kumo 的人构建的,我们希望保持这种状态。
